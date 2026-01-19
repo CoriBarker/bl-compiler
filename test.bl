@@ -1,0 +1,6 @@
+int a = 5;
+int b = 6;
+
+int c = a * b;
+
+int num = 2 + 2 * 2;
