@@ -1,7 +1,7 @@
 #ifndef AST_NODE_H
 #define AST_NODE_H
 
-#include "parser/node_type.h"
+#include "node_type.hpp"
 
 #include <string>
 #include <vector>

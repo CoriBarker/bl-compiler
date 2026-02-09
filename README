@@ -1,15 +1,15 @@
-blc
-===============
+blc - bl-compiler
+=================
 Written as A-Level project, compiler for the bl-language.
 
 
 Requirements
---------------
+------------
 - make
 
 
 Building
----------------
+--------
     mkdir build
     cd build
     ../configure

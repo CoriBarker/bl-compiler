@@ -1,4 +1,4 @@
-#include "lexer/lexer.h"
+#include "lexer/lexer.hpp"
 
 Lexer::Lexer(const std::string& src) : src(src), position(0), line(1), column(1) {}
 

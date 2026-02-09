@@ -1,4 +1,4 @@
-#include "semantic/symbol.h"
+#include "semantic/symbol.hpp"
 
 Symbol::Symbol(std::string name, SymbolType type, std::string data_type, int scope) : symbol_name(name), symbol_type(type), data_type(data_type), scope_level(scope_level) {}
 

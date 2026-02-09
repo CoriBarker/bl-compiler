@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "symbol_type.h"
+#include "symbol_type.hpp"
 
 class Symbol {
 public:

@@ -1,8 +1,8 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "lexer/token.h"
-#include "parser/ast_node.h"
+#include "lexer/token.hpp"
+#include "parser/ast_node.hpp"
 
 #include <vector>
 
