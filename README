@@ -1,12 +1,16 @@
-bl-compiler
+blc
+===============
+Written as A-Level project, compiler for the bl-language.
 
-Written as A-Level project, compiler toolchain for the bl-language.
 
-Build requirements:
-- C++ 17 compatablie compiler (e.g. g++, clang)
+Requirements
+--------------
 - make
 
-Build Instructions:
-mkdir build && cd build
-../configure
-make
+
+Building
+---------------
+    mkdir build
+    cd build
+    ../configure
+    make
