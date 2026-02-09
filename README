@@ -3,6 +3,10 @@ bl-compiler
 Written as A-Level project, compiler toolchain for the bl-language.
 
 Build requirements:
-- CMake 3.x
-- C++ 17 compatablie compiler (eg. gcc)
-- Make
+- C++ 17 compatablie compiler (e.g. g++, clang)
+- make
+
+Build Instructions:
+mkdir build && cd build
+../configure
+make
