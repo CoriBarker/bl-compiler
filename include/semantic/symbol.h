@@ -3,11 +3,11 @@
 #include <string>
 #include <vector>
 
-#include "types.h"
+#include "symbol_type.h"
 
 class Symbol {
 public:
-    explicit Symbol(std::string name, SymbolType type, std::string data_type, int scope);
+    explicit Symbol(std::string name, SymbolType type, std::string data_type, int scope_level);
     std::string getName();
     SymbolType getSymbolType();
     std::string getDataType();
@@ -25,14 +25,14 @@ public:
     std::string toString();
 
 private:
-    std::string name;
-    SymbolType symbol_type
-    std::string data_type
-    int scope_level
-    bool is_initialized
-    bool is_parameter
-    std::vector<std::string> parameter_types
-    std::string return_type
-    int line_declared
-    int column_declared
+    std::string symbol_name;
+    SymbolType symbol_type;
+    std::string data_type;
+    int scope_level;
+    bool is_initialized;
+    bool is_parameter;
+    std::vector<std::string> parameter_types;
+    std::string return_type;
+    int line_declared;
+    int column_declared;
 };
