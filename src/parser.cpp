@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "parser/parser.hpp"
+#include "parser.hpp"
 
 Parser::Parser(const std::vector<Token>& tokens) : tokens_(tokens), position_(0) {}
 

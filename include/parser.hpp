@@ -1,5 +1,4 @@
-#ifndef PARSER_H
-#define PARSER_H
+#pragma once
 
 #include "lexer/token.hpp"
 #include "parser/ast_node.hpp"
@@ -27,5 +26,3 @@ private:
     bool isAtEnd();
     void error(std::string s);
 };
-
-#endif

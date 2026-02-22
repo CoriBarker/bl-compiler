@@ -1,5 +1,4 @@
-#ifndef TOKEN_TYPE_H
-#define TOKEN_TYPE_H
+#pragma once
 
 enum class TokenType {
     INT,
@@ -21,5 +20,3 @@ enum class TokenType {
     INVALID
 
 };
-
-#endif

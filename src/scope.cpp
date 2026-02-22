@@ -1,4 +1,4 @@
-#include "semantic/scope.hpp"
+#include "scope.hpp"
 
 Scope::Scope(std::string name, int level, std::unique_ptr<Scope> parent) : scope_name(name), scope_level(level), parent_scope(parent) {}
 

@@ -2,8 +2,8 @@
 #include <sstream>
 #include <fstream>
 
-#include "lexer/lexer.hpp"
-#include "parser/parser.hpp"
+#include "lexer.hpp"
+#include "parser.hpp"
 
 std::string tokenTypeToString(TokenType type) {
     switch (type) {

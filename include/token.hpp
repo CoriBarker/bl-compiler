@@ -1,5 +1,4 @@
-#ifndef TOKEN_H
-#define TOKEN_H
+#pragma once
 
 #include "token_type.hpp"
 
@@ -13,5 +12,3 @@ struct Token {
 
     Token(TokenType t, const std::string& val, int line, int col) : type{t}, value{val}, line{line}, column{col} {};
 };
-
-#endif
