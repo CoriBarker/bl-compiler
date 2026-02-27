@@ -92,7 +92,7 @@ std::unique_ptr<ASTNode> Parser::parseDeclaration() {
 std::unique_ptr<ASTNode> Parser::parseAssignment() {
     std::string name = peek().value;
     advance();
-    advance(); // consume =
+    advance(); // consume "="
     auto value = parseExpression();
     return std::make_unique<Assignment>(name, std::move(value));
 }
