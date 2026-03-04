@@ -13,62 +13,96 @@ public:
     int col;
 
     virtual ~ASTNode() = default;
-};
+}
 
 class ProgramNode : ASTNode {
 public:
-    std::vector<ASTNode> function_declarations;
+    std::vector<FunctionDeclarationNode> function_declarations;
 
-    ProgramNode(std::vector<ASTNode> function_declarations, int line, int col) : function_declarations(function_declarations), line(line), col(col) { }
+    ProgramNode(std::vector<FunctionDeclarationNode> function_declarations, int line, int col) : function_declarations(function_declarations), line(line), col(col) { }
 };
 
-class FunctionDeclNode : ASTNode {
-    Type type;
+class FunctionDeclarationNode : public ASTNode {
+public:
+    std::string identifier;
     std::vector<ParameterNode> parameters;
-    std::vector<ASTNode> body;
+    Type return_type;
+    std::vector<StatementNode> body;
 
-    FunctionDeclNode(Type type, std::vector<ASTNode> parameters, std::vector<ASTNode> body, int line, int col) : type(type), parameters(parameters), body(body), line(line), col(col) { }
+    FunctionDeclarationNode(std::string identifier, std::vector<ParameterNode> parameters, Type return_type, std::vector<StatementNode> body, int line, int col) : identifier(identifier), parameters(parameters), return_type(return_type), body(body), line(line), col(col) { }
 };
 
-class ParameterNode : ASTNode {
-    std::string name;
+class ParameterNode : public ASTNode {
+public:
     Type type;
+    std::string identifier;
 
-    ParameterNode(std::string name, std::string type, int line, int col) : name(name), type(type), line(line) col(col) { }
+    ParameterNode(Type type, std::string identifier, int line, int column) : type(type), identifier(identifier), line(line), column(column) { }
 };
 
-class VarDeclNode : ASTNode {
-    std::string name;
+class ArgumentNode : public ASTNode {
+    ASTNode* expression;
+    ASTNode* variable;
+
+    ArgumentNode(ASTNode* expression, ASTNode* variable, int line int column) : expression(expression), variable(variable), line(line), column(column) { }
+};
+
+class VariableDeclarationNode : public ASTNode {
+public:
     Type type;
-
-    VarDeclNode(std::string name, std::string type, int line, int col) : name(name), type(type), line(line), col(col) { }
-};
-
-class AssignmentNode : ASTNode {
-    std::string var_name;
-    Type var_type;
+    std::string identifier;
     ASTNode* value;
+
+    VariableDeclarationNode(Type type, std::string identifier, ASTNode* value, int line, int column) : type(type), identifier(identifier), value(value), line(line), column(column) { }
+};
+
+class VariableAssignmentNode : public ASTNode {
+public:
+    std::string identifier;
+    ASTNode* value;
+
+    VariableAssignmentNode(std::string identifier, ASTNode* value, int line, int column) : identifier(identifier), value(value), line(line), column(column) { }
+};
+
+class ReturnNode : public ASTNode {
+public:
+    ASTNode* expression;
+
+    ReturnNode(ASTNode* expression, int line, int column) : expression(expression), line(line), column(column) { }
+};
+
+
+class BinaryOperationNode : public ASTNode {
+    char operation;
+    ASTNode* left;
+    ASTNode* right;
+
+    BinaryOperationNode(std::string operation, ASTNode* left, ASTNode* right, int line, int column) : operation(operation), left(left), right(right), line(line), column(column) { }
+};
+
+class UnaryOperationNode : public ASTNode {
+    char operation;
+    ASTNode* operand;
     
-    AssignmentNode(std::string var_name, Type var_type, ASTNode* value) : var_name(var_name), var_type(var_type), value(value), line(line), col(col) { }
+    UnaryOperationNode(char operation, ASTNode* operand, int line, int column) : operation(operation), operand(operand), line(line), column(column) { }
 };
 
-class IfStatementNode : ASTNode {
-    ASTNode* expression;
-    ASTNode* body;
-    ASTNode* else_statement = nullptr;
-    ASTNode* elif_statement = nullptr;
+class StringLiteralNode : public ASTNode {
+    std::string value;
 
-    IfStatementNode(ASTNode* expression, ASTNode* body, ASTNode* else_statement, ASTNode* elif_statement, int line, int col) : expression(expression), body(body), else_statement(else_statement), elif_statement(elif_statement), line(line), col(col) { }
+    StringLiteralNode(std::string value, int line, int column) : value(value), line(line), column(column) { }
 };
 
-class WhileStatementNode : ASTNode {
-    ASTNode* expression;
-    ASTNode* body;
+class NumberLiteralNode : public ASTNode {
+    int value;
 
-    WhileStatementNode(ASTNode* expression, ASTNode* body, int line, int col) : expression(expression), body(body), line(line), col(col) { }
+    NumberLiteralNode(int value, int line, int column) : value(value), line(line), column(column) { }
 };
 
-class ForStatementNode : ASTNode {
-    StatementNode* init;
-    ASTNode* 
+class ComparisonNode : public ASTNode {
+    std::string operation;
+    ASTNode* left;
+    ASTNode* right;
+
+    ComparisonNode(std::string operation, ASTNode* left, ASTNode* right, int line, int col) : operation(operation), left(left), right(right), line(line), column(column) { }
 };
