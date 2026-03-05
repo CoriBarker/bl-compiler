@@ -95,9 +95,13 @@ std::string visitProgram(ProgramNode* node){
     // visit each function
     // return
 
+    std::vector<FunctionDeclarationNode*> functions = node->function_declarations;
+    for (auto element : functions) {
+	visitFunctionDeclaration(element);
+    };
 }
 
-std::string visitFunctionDecl(FunctionDeclNode* node){
+std::string visitFunctionDeclaration(FunctionDeclarationNode* node){
     // check for dupe name
     // create function symbol and insert into global scope
     // check if main function
@@ -107,6 +111,7 @@ std::string visitFunctionDecl(FunctionDeclNode* node){
     // verify non-void functions have return statements
     // exit function scope and clear context
     // return
+    
 
 }
 
@@ -119,7 +124,7 @@ std::string visitParameter(ParameterNode*){
 
 }
 
-std::string visitVarDeclaration(VarDeclNode* node){
+std::string visitVariableDeclaration(VariableDeclarationNode* node){
     // get variable information
     // check for dupes
     // if initializer exists, check type
@@ -177,7 +182,7 @@ std::string visitReturnStatement(ReturnStatementNode* node){
     
 }
 
-std::String visitExpressionStatement(ExpressionStatementNode* node){
+std::string visitExpressionStatement(ExpressionStatementNode* node){
     // get the expression
     // analyze expression
     // return

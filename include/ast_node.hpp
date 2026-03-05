@@ -17,9 +17,9 @@ public:
 
 class ProgramNode : ASTNode {
 public:
-    std::vector<FunctionDeclarationNode> function_declarations;
+    std::vector<FunctionDeclarationNode*> function_declarations;
 
-    ProgramNode(std::vector<FunctionDeclarationNode> function_declarations, int line, int col) : function_declarations(function_declarations), line(line), col(col) { }
+    ProgramNode(std::vector<FunctionDeclarationNode*> function_declarations, int line, int col) : function_declarations(function_declarations), line(line), col(col) { }
 };
 
 class FunctionDeclarationNode : public ASTNode {
