@@ -32,6 +32,14 @@ public:
     FunctionDeclarationNode(std::string identifier, std::vector<ParameterNode*> parameters, Type return_type, std::vector<ASTNode*> body, int line, int col) : identifier(identifier), parameters(parameters), return_type(return_type), body(body), line(line), col(col) { }
 };
 
+class FunctionCallNode : public ASTNode {
+public:
+    std::string identifier;
+    std::vectot<ArgumentNode*> arguments;
+
+    FunctionCallNode(std::string identifier, std::vector<ArgumentNode*> arguments, int line, int column) : identifier(identifier), arguments(arguments), line(line), column(column) { }
+};
+
 class ParameterNode : public ASTNode {
 public:
     Type type;
@@ -138,10 +146,3 @@ public:
     VariableNode(std::string identifier, int line, int column) : identifier(identifier), line(line), column(column) { }
 };
 
-class FunctionCallNode : public ASTNode {
-public:
-    std::string identifier;
-    std::vectot<ArgumentNode*> arguments;
-
-    FunctionCallNode(std::string identifier, std::vector<ArgumentNode*> arguments, int line, int column) : identifier(identifier), arguments(arguments), line(line), column(column) { }
-};
