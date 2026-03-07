@@ -1,7 +1,5 @@
 #include "semantic_analyzer.hpp"
 
-SemanticAnalyzer::SemanticAnalyzer() : symobl_table(new SemanticTable), errors(std::vector<Error>), warnings(std::vector<Error>), current_function(nullptr), current_function_return_type(""), has_main_function(false) {}
-
 bool SemanticAnalyzer::analyze(ASTNode* ast) {
     symbol_table.enterScope("global")
     visit(ast);
@@ -99,6 +97,8 @@ std::string visitProgram(ProgramNode* node){
     for (auto element : functions) {
 	visitFunctionDeclaration(element);
     };
+
+    return;
 }
 
 std::string visitFunctionDeclaration(FunctionDeclarationNode* node){
@@ -112,6 +112,7 @@ std::string visitFunctionDeclaration(FunctionDeclarationNode* node){
     // exit function scope and clear context
     // return
     
+    current_function = node;
 
 }
 

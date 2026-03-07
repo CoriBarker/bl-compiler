@@ -1,5 +1,10 @@
 #pragma once
 
+#include "ast_node.hpp"
+
+#include <string>
+#include <vector>
+
 class SemanticAnalyzer {
 public:
     explicit SemanticAnalyzer();
@@ -44,3 +49,6 @@ private:
     std::string current_function_return_type;
     bool has_main_function;
 };
+
+
+SemanticAnalyzer::SemanticAnalyzer() : symbol_table(), errors(), warnings(), current_function(nullptr), current_function_return_type(), has_main_functions(false) { }
