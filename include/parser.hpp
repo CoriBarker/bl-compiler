@@ -1,7 +1,7 @@
 #pragma once
 
-#include "lexer/token.hpp"
-#include "parser/ast_node.hpp"
+#include "token.hpp"
+#include "ast_node.hpp"
 
 #include <vector>
 

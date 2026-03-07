@@ -1,6 +1,5 @@
 #pragma once
 
-#include "node_type.hpp"
 #include "type.hpp"
 
 #include <string>

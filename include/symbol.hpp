@@ -1,13 +1,18 @@
 #pragma once
 
+#include "symbol_type.hpp"
+#include "type.hpp"
+
+#include <variant>
+#include <string>
+
 class Symbol {
 public:
     explicit Symbol();
 
 private:
     std::string identifier;
-    Type type;
+
+    SymbolType symbol_type;
     std::variant<int, bool, std::string> value;
 };
-
-Symbol::Symbol(std::string identifier, Type type, std::variant<int, bool, std::string> value) : identifier(identifier), type(type), value(value) { } 

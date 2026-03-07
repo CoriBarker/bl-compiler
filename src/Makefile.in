@@ -99,9 +99,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am__dirstamp = $(am__leading_dot)dirstamp
-am_blc_OBJECTS = main.$(OBJEXT) lexer/lexer.$(OBJEXT) \
-	parser/parser.$(OBJEXT)
+am_blc_OBJECTS = main.$(OBJEXT) lexer.$(OBJEXT) parser.$(OBJEXT)
 blc_OBJECTS = $(am_blc_OBJECTS)
 blc_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -119,8 +117,8 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/main.Po lexer/$(DEPDIR)/lexer.Po \
-	parser/$(DEPDIR)/parser.Po
+am__depfiles_remade = ./$(DEPDIR)/lexer.Po ./$(DEPDIR)/main.Po \
+	./$(DEPDIR)/parser.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -251,8 +249,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 blc_SOURCES = \
     main.cpp \
-    lexer/lexer.cpp \
-    parser/parser.cpp 
+    lexer.cpp \
+    parser.cpp 
 
 AM_CXXFLAGS = \
     -std=c++17 \
@@ -333,22 +331,6 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-lexer/$(am__dirstamp):
-	@$(MKDIR_P) lexer
-	@: > lexer/$(am__dirstamp)
-lexer/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) lexer/$(DEPDIR)
-	@: > lexer/$(DEPDIR)/$(am__dirstamp)
-lexer/lexer.$(OBJEXT): lexer/$(am__dirstamp) \
-	lexer/$(DEPDIR)/$(am__dirstamp)
-parser/$(am__dirstamp):
-	@$(MKDIR_P) parser
-	@: > parser/$(am__dirstamp)
-parser/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) parser/$(DEPDIR)
-	@: > parser/$(DEPDIR)/$(am__dirstamp)
-parser/parser.$(OBJEXT): parser/$(am__dirstamp) \
-	parser/$(DEPDIR)/$(am__dirstamp)
 
 blc$(EXEEXT): $(blc_OBJECTS) $(blc_DEPENDENCIES) $(EXTRA_blc_DEPENDENCIES) 
 	@rm -f blc$(EXEEXT)
@@ -356,15 +338,13 @@ blc$(EXEEXT): $(blc_OBJECTS) $(blc_DEPENDENCIES) $(EXTRA_blc_DEPENDENCIES)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f lexer/*.$(OBJEXT)
-	-rm -f parser/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lexer.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@lexer/$(DEPDIR)/lexer.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@parser/$(DEPDIR)/parser.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -505,10 +485,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f lexer/$(DEPDIR)/$(am__dirstamp)
-	-rm -f lexer/$(am__dirstamp)
-	-rm -f parser/$(DEPDIR)/$(am__dirstamp)
-	-rm -f parser/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -518,9 +494,9 @@ clean: clean-am
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/main.Po
-	-rm -f lexer/$(DEPDIR)/lexer.Po
-	-rm -f parser/$(DEPDIR)/parser.Po
+		-rm -f ./$(DEPDIR)/lexer.Po
+	-rm -f ./$(DEPDIR)/main.Po
+	-rm -f ./$(DEPDIR)/parser.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -566,9 +542,9 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/main.Po
-	-rm -f lexer/$(DEPDIR)/lexer.Po
-	-rm -f parser/$(DEPDIR)/parser.Po
+		-rm -f ./$(DEPDIR)/lexer.Po
+	-rm -f ./$(DEPDIR)/main.Po
+	-rm -f ./$(DEPDIR)/parser.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

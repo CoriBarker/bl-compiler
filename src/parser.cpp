@@ -4,8 +4,8 @@
 
 Parser::Parser(const std::vector<Token>& tokens) : tokens_(tokens), position_(0) {}
 
-std::unique_ptr<Program> Parser::parse() {
-    auto program = std::make_unique<Program>();
+std::unique_ptr<ProgramNode> Parser::parse() {
+    auto program = std::make_unique<ProgramNode>();
 
     while (peek().type != TokenType::END_OF_FILE) {
         try {

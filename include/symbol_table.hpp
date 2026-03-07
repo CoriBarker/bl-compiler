@@ -1,12 +1,14 @@
 #pragma once
 
+#include "scope.hpp"
+
+#include <vector>
+
 class SymbolTable {
 public:
-
+    explicit SymbolTable();
+    void addScope(Scope* scope);
 
 private:
-    std::vector<Scope> scopes;
-    Scope* current_scope;
-    
-
+    std::vector<Scope*> scopes;
 };
