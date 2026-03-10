@@ -7,5 +7,4 @@ public:
 private:
     std::vector<Symbol> symbols;
     int scope_level;
-
 };
