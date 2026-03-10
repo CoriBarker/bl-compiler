@@ -1,30 +1,28 @@
 #pragma once
 
-#include "symbol_type.hpp"
 #include "type.hpp"
 
 #include <variant>
 #include <vector>
 #include <string>
 
+enum SymbolType {
+    VARIABLE,
+    FUNCTION,
+};
+
 class Symbol {
 public:
     std::string identifier;
+    SymbolType symbol_type;
+    Type data_type;
+    Type return_type;
+    std::vector<std::string> parameter_identifiers;
+    std::vector<Type> parameter_types;
     int line;
     int column;
 
-    virtual ~Symbol() = default;
-};
+    Symbol(std::string identifier, Type data_type, int line, int column) : identifier(identifier), data_type(data_type), line(line), column(column), symbol_type(SymbolType::VARIABLE) { }
 
-class FunctionDeclarationSymbol : public Symbol {
-    Type return_type;
-    std::vector<std::string> parameters;
-
-    FunctionDeclarationSymbol(std::string identifier, Type return_type, std::vector<std::string> parameters, int line, int column) : identifier(identifier), return_type(return_type), parameters(parameters), line(line), column(column) { }
-};
-
-class VariableDeclarationSymbol : public Symbol {
-    Type type;
-
-    VariableDeclarationSymbol
+    Symbol(std::string identifier, Type return_type, std::vector<std::string> parameter_identifiers,  std::vector<Type> parameter_types, int line, int column) : identifier(identifier), data_type(data_type), return_type(return_type), parameter_identifiers(parameter_identifiers), parameter_types(parameter_types), line(line), column(column), symbol_type(SymbolType::FUNCTION) { }
 };
