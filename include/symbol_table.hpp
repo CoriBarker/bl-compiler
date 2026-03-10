@@ -4,7 +4,7 @@
 
 #include <vector>
 
-class SymbolTable {
+lass SymbolTable {
 public:
     explicit SymbolTable();
     void addScope(Scope* scope);
