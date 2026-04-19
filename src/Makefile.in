@@ -87,6 +87,8 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 bin_PROGRAMS = blc$(EXEEXT)
+@DEBUG_TRUE@am__append_1 = -O0 -g3 -fsanitize=address,undefined -fno-omit-frame-pointer
+@DEBUG_FALSE@am__append_2 = -O2 -DNDEBUG
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -252,10 +254,8 @@ blc_SOURCES = \
     lexer.cpp \
     parser.cpp 
 
-AM_CXXFLAGS = \
-    -std=c++17 \
-    -I$(top_srcdir)/include
-
+AM_CXXFLAGS = -std=c++17 -I$(top_srcdir)/include -Wall -Wextra \
+	-Wpedantic $(am__append_1) $(am__append_2)
 all: all-am
 
 .SUFFIXES:
