@@ -61,7 +61,7 @@
     <block>
 
 <for_init> ::= <type> <identifier> [ "=" <expression> ]
-             | <expression>
+             | <identifier> "=" <expression>
 
 
 <expression> ::= <logical_or>
