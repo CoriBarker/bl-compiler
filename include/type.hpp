@@ -1,6 +1,6 @@
 #pragma once
 
-enum struct TypeKind {
+enum struct Type {
     INT,
     CHAR,
     BOOL,
