@@ -3,7 +3,9 @@ bin_PROGRAMS = blc
 blc_SOURCES = \
     main.cpp \
     lexer.cpp \
-    parser.cpp 
+    parser.cpp \
+	symbol_table.cpp \
+	symbol_table_generator.cpp
 
 AM_CXXFLAGS = \
     -std=c++17 \
@@ -13,7 +15,7 @@ AM_CXXFLAGS = \
 	-Wpedantic
 
 if DEBUG
-AM_CXXFLAGS += -O0 -g3 -fsanitize=address,undefined -fno-omit-frame-pointer
+AM_CXXFLAGS += -O0 -g3 -fno-omit-frame-pointer
 else
 AM_CXXFLAGS += -O2 -DNDEBUG
 endif

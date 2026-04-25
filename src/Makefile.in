@@ -87,7 +87,7 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 bin_PROGRAMS = blc$(EXEEXT)
-@DEBUG_TRUE@am__append_1 = -O0 -g3 -fsanitize=address,undefined -fno-omit-frame-pointer
+@DEBUG_TRUE@am__append_1 = -O0 -g3 -fno-omit-frame-pointer
 @DEBUG_FALSE@am__append_2 = -O2 -DNDEBUG
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -101,7 +101,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_blc_OBJECTS = main.$(OBJEXT) lexer.$(OBJEXT) parser.$(OBJEXT)
+am_blc_OBJECTS = main.$(OBJEXT) lexer.$(OBJEXT) parser.$(OBJEXT) \
+	symbol_table.$(OBJEXT) symbol_table_generator.$(OBJEXT)
 blc_OBJECTS = $(am_blc_OBJECTS)
 blc_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -120,7 +121,8 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/lexer.Po ./$(DEPDIR)/main.Po \
-	./$(DEPDIR)/parser.Po
+	./$(DEPDIR)/parser.Po ./$(DEPDIR)/symbol_table.Po \
+	./$(DEPDIR)/symbol_table_generator.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -252,7 +254,9 @@ top_srcdir = @top_srcdir@
 blc_SOURCES = \
     main.cpp \
     lexer.cpp \
-    parser.cpp 
+    parser.cpp \
+	symbol_table.cpp \
+	symbol_table_generator.cpp
 
 AM_CXXFLAGS = -std=c++17 -I$(top_srcdir)/include -Wall -Wextra \
 	-Wpedantic $(am__append_1) $(am__append_2)
@@ -345,6 +349,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lexer.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/symbol_table.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/symbol_table_generator.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -497,6 +503,8 @@ distclean: distclean-am
 		-rm -f ./$(DEPDIR)/lexer.Po
 	-rm -f ./$(DEPDIR)/main.Po
 	-rm -f ./$(DEPDIR)/parser.Po
+	-rm -f ./$(DEPDIR)/symbol_table.Po
+	-rm -f ./$(DEPDIR)/symbol_table_generator.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -545,6 +553,8 @@ maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/lexer.Po
 	-rm -f ./$(DEPDIR)/main.Po
 	-rm -f ./$(DEPDIR)/parser.Po
+	-rm -f ./$(DEPDIR)/symbol_table.Po
+	-rm -f ./$(DEPDIR)/symbol_table_generator.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
