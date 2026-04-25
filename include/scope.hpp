@@ -1,11 +1,10 @@
 #pragma once
 
-class Scope {
-public:
-    explicit Scope(int scope_level);
+#include <string>
+#include <unordered_map>
 
-    add symbol
-private:
-    std::vector<Symbol> symbols;
-    int scope_level;
+struct Scope {
+    std::string scope_name;
+    std::unordered_map<std::string, std::string> locals;
+    Scope* parent = nullptr;
 };
