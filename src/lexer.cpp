@@ -201,11 +201,18 @@ char Lexer::advance() {
 
 void Lexer::skipWhitespace() {
     while (src[position] == ' ' || src[position] == '\n') {
-        if (src[position] == ' ') {
+        if (src[position] == '\t') {
+            position++;
+            column++;
+        }
+        
+        else if (src[position] == ' ') {
             position++;
             column++;
 
-        } else if (src[position] == '\n') {
+        }
+
+        else if (src[position] == '\n') {
             position++;
             column = 1;
             line++;
