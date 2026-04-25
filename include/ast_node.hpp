@@ -145,7 +145,7 @@ public:
 
 class ForInitNode : public ASTNode {
 public:
-    Type type;
+    Type type = Type::VOID;
     std::string identifier;
     std::unique_ptr<ASTNode> expression;
 
