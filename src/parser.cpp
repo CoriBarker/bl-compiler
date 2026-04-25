@@ -60,6 +60,9 @@ std::unique_ptr<ParameterNode> Parser::parseParameter() {
 
     param->type = parseType();
 
+    param->line = peek().line;
+    param->column = peek().column;
+
     expect(TokenType::IDENTIFIER, "as name of parameter");
     param->identifier = tokens[position-1].value;
    
@@ -146,6 +149,9 @@ std::unique_ptr<VariableDeclarationNode> Parser::parseVariableDeclaration() {
 
     variable_declaration->type = parseType();
 
+    variable_declaration->line = peek().line;
+    variable_declaration->column = peek().column;
+
     expect(TokenType::IDENTIFIER, "as name of variable");
     variable_declaration->identifier = tokens[position-1].value;
 
@@ -162,6 +168,8 @@ std::unique_ptr<VariableDeclarationNode> Parser::parseVariableDeclaration() {
 
 std::unique_ptr<VariableAssignmentNode> Parser::parseVariableAssignment() {
     auto variable_assignment = std::make_unique<VariableAssignmentNode>();
+    variable_assignment->line = peek().line;
+    variable_assignment->column = peek().column;
 
     expect(TokenType::IDENTIFIER, "as variable name");
     variable_assignment->identifier = tokens[position-1].value;
@@ -177,6 +185,8 @@ std::unique_ptr<VariableAssignmentNode> Parser::parseVariableAssignment() {
 
 std::unique_ptr<ReturnNode> Parser::parseReturnStatement() {
     auto return_statement = std::make_unique<ReturnNode>();
+    return_statement->line = peek().line;
+    return_statement->column = peek().column;
 
     expect(TokenType::RETURN, "at start of return statement");
 
@@ -199,6 +209,8 @@ std::unique_ptr<ASTNode> Parser::parseExpressionStatement() {
 
 std::unique_ptr<IfStatementNode> Parser::parseIfStatement() {
     auto if_statement = std::make_unique<IfStatementNode>();
+    if_statement->line = peek().line;
+    if_statement->column = peek().column;
 
     expect(TokenType::IF, "at start of if statement");
 
@@ -219,6 +231,8 @@ std::unique_ptr<IfStatementNode> Parser::parseIfStatement() {
 
 std::unique_ptr<ElseStatementNode> Parser::parseElseStatement() {
     auto else_statement = std::make_unique<ElseStatementNode>();
+    else_statement->line = peek().line;
+    else_statement->column = peek().column;
 
     expect(TokenType::ELSE, "at start of else statement");
 
@@ -229,6 +243,8 @@ std::unique_ptr<ElseStatementNode> Parser::parseElseStatement() {
 
 std::unique_ptr<WhileStatementNode> Parser::parseWhileStatement() {
     auto while_statement = std::make_unique<WhileStatementNode>();
+    while_statement->line = peek().line;
+    while_statement->column = peek().column;
 
     expect(TokenType::WHILE, "at start of while statement");
 
@@ -245,6 +261,8 @@ std::unique_ptr<WhileStatementNode> Parser::parseWhileStatement() {
 
 std::unique_ptr<ForStatementNode> Parser::parseForStatement() {
     auto for_statement = std::make_unique<ForStatementNode>();
+    for_statement->line = peek().line;
+    for_statement->column = peek().column;
 
     expect(TokenType::FOR, "at start of for statement");
 
@@ -275,12 +293,17 @@ std::unique_ptr<ForStatementNode> Parser::parseForStatement() {
 
 std::unique_ptr<ForInitNode> Parser::parseForInit() {
     auto for_init = std::make_unique<ForInitNode>();
+    for_init->line = peek().line;
+    for_init->column = peek().column;
 
     switch (peek().type) {
     case TokenType::INT:
     case TokenType::STRING:
     case TokenType::BOOL:
         for_init->type = parseType();
+
+        for_init->line = peek().line;
+        for_init->column = peek().column;
 
         expect(TokenType::IDENTIFIER, "as name of variable");
         for_init->identifier = tokens[position-1].value;
@@ -294,6 +317,8 @@ std::unique_ptr<ForInitNode> Parser::parseForInit() {
         break;
 
     default:
+        for_init->line = peek().line;
+        for_init->column = peek().column;
         expect(TokenType::IDENTIFIER, "as name of variable");
         for_init->identifier = tokens[position-1].value;
 
@@ -309,6 +334,8 @@ std::unique_ptr<ForInitNode> Parser::parseForInit() {
 
 std::unique_ptr<VariableAssignmentNode> Parser::parseForUpdate() {
     auto update = std::make_unique<VariableAssignmentNode>();
+    update->line = peek().line;
+    update->column = peek().column;
     
     expect(TokenType::IDENTIFIER, "as variable name");
     update->identifier = tokens[position-1].value;
