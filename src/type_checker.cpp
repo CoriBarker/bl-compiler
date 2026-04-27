@@ -319,5 +319,16 @@ Symbol* TypeChecker::lookupVariable(const std::string& name) {
     symbol = table.lookupQualified("global::" + name);
     if (symbol) return symbol;
 
+    std::string suffix = "::" + name;
+    std::string prefix = current_function_name + "::";
+
+    for (auto& pair : table.symbols) {
+        const std::string& key = pair.first;
+        if (key.size() > suffix.size() && key.substr(0, prefix.size()) == prefix && key.substr(key.size() - suffix.size()) == suffix) {
+            return &pair.second;
+        }
+    }
+    
+
     return nullptr;
 }
