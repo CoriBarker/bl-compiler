@@ -7,6 +7,7 @@
 #include "parser.hpp"
 #include "symbol_table_generator.hpp"
 #include "type_checker.hpp"
+#include "code_generator.hpp"
 
 // ---------------- HELPERS ----------------
 std::string toString(Type type) {
@@ -321,6 +322,16 @@ int main(int argc, char* argv[]) {
     if (verbose) {
         std::cout << "\n--- Type Check ---\n";
         std::cout << "  No type errors found.\n";
+    }
+
+    // -------- TYPE CHECKING --------
+    CodeGenerator code_gen(table);
+    std::string asm_file = filename.replace(filename.size() - 2, 2, 1, 's');
+    code_gen.generate(ast.get(), asm_file);
+
+    if (verbose) {
+        std::cout << "\n--- CODE GEN ---\n";
+        std::cout << "  Generated assembly: " << asm_file << "\n";
     }
 
     std::cout << "blc: compiled successfully\n";
