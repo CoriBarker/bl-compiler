@@ -348,7 +348,7 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
     
-    cmd = "ld -o " + stem + " " + stem + ".o";
+    cmd = "gcc " + stem + ".o -o " + stem + " -no-pie";
     res = system(cmd.c_str());
     if (res != 0) {
         std::cerr << "linker failed\n";
