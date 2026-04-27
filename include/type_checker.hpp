@@ -1,6 +1,7 @@
 #pragma once
 
 #include "symbol_table.hpp"
+#include "ast_node.hpp"
 
 #include <string>
 #include <vector>
@@ -10,7 +11,7 @@ public:
     TypeChecker(SymbolTable& table);
 
     void check(ProgramNode* node);
-    std::vector<std::string>> getErrors();
+    std::vector<std::string> getErrors();
 
 private:
     SymbolTable& table;

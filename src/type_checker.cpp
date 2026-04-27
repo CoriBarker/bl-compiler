@@ -1,0 +1,311 @@
+#include "type_checker.hpp"
+
+TypeChecker::TypeChecker(SymbolTable& table) : table(table) {}
+
+void TypeChecker::check(ProgramNode* node) {
+    auto& functions = node->function_declarations;
+
+    for (int i = 0; i < (int)functions.size(); i++) {
+        auto& func = functions[i];
+        current_function_return_type = func->return_type;
+
+        checkFunction(func.get());
+    }
+}
+
+void TypeChecker::checkFunction(FunctionDeclarationNode* node) {
+    for (int i = 0; i < (int)node->body.size(); i++) {
+        checkStatement(node->body[i].get());
+    }
+}
+
+void TypeChecker::checkStatement(ASTNode* node) {
+    if (auto p = dynamic_cast<VariableDeclarationNode*>(node)) {
+        checkVariableDeclaration(p);
+    }
+
+    else if (auto p = dynamic_cast<VariableAssignmentNode*>(node)) {
+        checkVariableAssignment(p);
+    }
+
+    else if (auto p = dynamic_cast<ReturnNode*>(node)) {
+        checkReturn(p);
+    }
+
+    else if (auto p = dynamic_cast<IfStatementNode*>(node)) {
+        checkIf(p);
+    }
+
+    else if (auto p = dynamic_cast<WhileStatementNode*>(node)) {
+        checkWhile(p);
+    }
+
+    else if (auto p = dynamic_cast<ForStatementNode*>(node)) {
+        checkFor(p);
+    }
+}
+
+void TypeChecker::checkVariableDeclaration(VariableDeclarationNode* node) {
+    Type left = node->type;
+
+    if (node->value) {
+        Type right = inferType(node->value.get());
+
+        if (left == Type::VOID || right == Type::VOID) {
+            return;
+        }
+        
+        if (left != right) {
+            error("cannot assign '" + typeToString(right) + "' to '" + typeToString(left) + "' variable '" + node->identifier + "'", node->line, node->column);
+        }
+    }
+}
+
+void TypeChecker::checkVariableAssignment(VariableAssignmentNode* node) {
+    Symbol* symbol = table.lookup(node->identifier);
+    Type left = symbol->type;
+    Type right = inferType(node->value.get());
+
+    if (left == Type::VOID || right == Type::VOID) {
+        return;
+    }
+
+    if (left != right) {
+        error("cannot assign '" + typeToString(right) + "' to '" + typeToString(left) + "' variable '" + node->identifier + "'", node->line, node->column);
+    }
+}
+
+void TypeChecker::checkReturn(ReturnNode* node) {
+    Type return_type = inferType(node->expression.get());
+
+    if (return_type != current_function_return_type) {
+        error("function returns '" + typeToString(current_function_return_type) + "' but got '" + typeToString(return_type) + "'", node->line, node->column);
+    }
+}
+
+void TypeChecker::checkIf(IfStatementNode* node) {
+    if (inferType(node->expression.get()) != Type::BOOL) {
+        error("'if' condition must be 'bool' but got '" + typeToString(inferType(node->expression.get())) + "'", node->line, node->column);
+    }
+
+    for (int i = 0; i < (int)node->body.size(); i++) {
+        checkStatement(node->body[i].get());
+    }
+
+    if (node->else_statement) {
+        for (int i = 0; i < (int)node->else_statement->body.size(); i++) {
+            checkStatement(node->else_statement->body[i].get());
+        }
+    }
+}
+
+void TypeChecker::checkWhile(WhileStatementNode* node) {
+    if (inferType(node->expression.get()) != Type::BOOL) {
+        error("'while' condition must be 'bool' but got '" + typeToString(inferType(node->expression.get())) + "'", node->line, node->column);
+    }
+
+    for (int i = 0; i < (int)node->body.size(); i++) {
+        checkStatement(node->body[i].get());
+    }
+}
+
+void TypeChecker::checkFor(ForStatementNode* node) {
+    if (node->init && node->init->type != Type::VOID) {
+        Type left = node->init->type;
+        Type right = inferType(node->init->expression.get());
+
+        if (left == Type::VOID || right == Type::VOID) {
+            return;
+        }
+
+        if (left != right) {
+            error("cannot assign '" + typeToString(right) + "' to '" + typeToString(left) + "' variable '" + node->init->identifier + "'", node->init->line, node->init->column);
+        }
+    }
+
+    if (node->condition) {
+        if (inferType(node->condition.get()) != Type::BOOL) {
+            error("'for' condition must be 'bool' but got '" + typeToString(inferType(node->condition.get())) + "'", node->condition->line, node->condition->column);
+        }
+    }
+
+    if (node->update) {
+        checkVariableAssignment(dynamic_cast<VariableAssignmentNode*>(node->update.get()));
+    }
+
+    for (int i = 0; i < (int)node->body.size(); i++) {
+        checkStatement(node->body[i].get());
+    }
+}
+
+Type TypeChecker::inferType(ASTNode* node) {
+    if (!node) return Type::VOID;
+
+    if (dynamic_cast<NumberLiteralNode*>(node)) {
+        return Type::INT;
+    }
+
+    if (dynamic_cast<BooleanLiteralNode*>(node)) {
+        return Type::BOOL;
+    }
+
+    if (dynamic_cast<StringLiteralNode*>(node)) {
+        return Type::STRING;
+    }
+
+    if (auto* p = dynamic_cast<IdentifierNode*>(node)) {
+        return inferIdentifier(p);
+    }
+
+    if (auto* p = dynamic_cast<BinaryOperationNode*>(node)) {
+        return inferBinaryOp(p);
+    }
+    
+    if (auto* p = dynamic_cast<UnaryOperationNode*>(node)) {
+        return inferUnaryOp(p);
+    }
+
+    if (auto* p = dynamic_cast<FunctionCallNode*>(node)) {
+        return inferFunctionCall(p);
+    }
+
+    return Type::VOID;
+}
+
+Type TypeChecker::inferIdentifier(IdentifierNode* node) {
+    if (Symbol* symbol = table.lookup(node->value)) {
+        return symbol->type;
+    }
+
+    error("'" + node->value + "' is undefined", node->line, node->column);
+    return Type::VOID;
+}
+
+Type TypeChecker::inferBinaryOp(BinaryOperationNode* node) {
+    if (node->operation == "+" || node->operation == "-" || node->operation == "*" || node->operation == "/" || node->operation == "%") {
+        Type left = inferType(node->left.get());
+        Type right = inferType(node->right.get());
+
+        if (left == Type::VOID || right == Type::VOID) {
+            return Type::VOID;
+        }
+        
+        if (left != right) {
+            error("cannot apply '" + node->operation + "' to '" + typeToString(left) + "' and '" + typeToString(right) + "'", node->line, node->column);
+            return Type::VOID;
+        }
+
+        return left;
+    }
+
+    if (node->operation == "==" || node->operation == "!=" || node->operation == "<" || node->operation == ">" || node->operation == "<=" || node->operation == ">=") {
+        Type left = inferType(node->left.get());
+        Type right = inferType(node->right.get());
+
+        if (left == Type::VOID || right == Type::VOID) {
+            return Type::VOID;
+        }
+
+        if (left != right) {
+            error("cannot compare '" + typeToString(left) + "' and '" + typeToString(right) + "' with '" + node->operation + "'", node->line, node->column);
+            return Type::VOID;
+        }
+
+        return Type::BOOL;
+    }
+
+    if (node->operation == "&&" || node->operation == "||") {
+        Type left = inferType(node->left.get());
+        Type right = inferType(node->right.get());
+
+        if (left == Type::VOID || right == Type::VOID) {
+            return Type::VOID;
+            error("cannot apply '" + node->operation + "' to '" + typeToString(left) + "' and '" + typeToString(right) + "'", node->line, node->column);
+        }
+
+        if (left != right) {
+            return Type::VOID;
+        }
+
+        if (left != Type::BOOL) {
+            error("'" + node->operation + "' requires 'bool' operands but left side is '" + typeToString(left) + "'", node->line, node->column);
+            return Type::VOID;
+        }
+
+        if (right != Type::BOOL) {
+            error("'" + node->operation + "' requires 'bool' operands but right side is '" + typeToString(right) + "'", node->line, node->column);
+            return Type::VOID;
+        }
+
+        return Type::BOOL;
+    }
+
+    return Type::VOID;
+}
+
+Type TypeChecker::inferUnaryOp(UnaryOperationNode* node) {
+    if (node->operation == "-") {
+        if (inferType(node->operand.get()) != Type::INT) {
+            error("cannot apply '-' to '" + typeToString(inferType(node->operand.get())) + "', expected 'int'", node->line, node->column);
+            return Type::VOID;
+        }
+
+        return Type::INT;
+    }
+
+    if (node->operation == "!") {
+        if (inferType(node->operand.get()) != Type::BOOL) {
+            error("cannot apply '!' to '" + typeToString(inferType(node->operand.get())) + "', expected 'bool'", node->line, node->column);
+            return Type::VOID;
+        }
+
+        return Type::BOOL;
+    }
+
+    return Type::VOID;
+}
+
+Type TypeChecker::inferFunctionCall(FunctionCallNode* node) {
+    Symbol* symbol = table.lookup(node->identifier);
+    if (!symbol) return Type::VOID;
+
+    if (node->arguments.size() != symbol->parameter_types.size()) {
+        error("'" + node->identifier + "' expects " + std::to_string(symbol->parameter_types.size()) + " argument(s) but got " + std::to_string(node->arguments.size()), node->line, node->column);
+        return Type::VOID;
+    }
+
+    for (int i = 0; i < (int)node->arguments.size(); i++) {
+        if (inferType(node->arguments[i].get()) != symbol->parameter_types[i]) {
+            error("'" + node->identifier + "' expects '" + typeToString(symbol->parameter_types[i]) + "' for argument " + std::to_string(i + 1) + " but got '" + typeToString(inferType(node->arguments[i].get())) + "'", node->arguments[i]->line, node->arguments[i]->column);
+            return Type::VOID;
+        }
+    }
+
+    return symbol->type;
+}
+
+void TypeChecker::error(const std::string& message, int line, int column) {
+    std::string err;
+    err += "ERROR: " + message + "\n";
+    err += "       at line " + std::to_string(line) + ", column " + std::to_string(column) + "\n";
+ 
+    errors.push_back(err);
+}
+
+std::string TypeChecker::typeToString(Type type) {
+    switch (type)
+    {
+        case Type::INT: return "INT";
+        case Type::CHAR: return "CHAR";
+        case Type::BOOL: return "BOOL";
+        case Type::STRING: return "STRING";
+        case Type::FLOAT: return "FLOAT";
+        case Type::DOUBLE: return "DOUBLE";
+        case Type::VOID: return "VOID";
+        default: return "unknown";
+    }
+}
+
+std::vector<std::string> TypeChecker::getErrors() {
+    return errors;
+}
