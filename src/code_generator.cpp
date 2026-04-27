@@ -166,16 +166,23 @@ void CodeGenerator::generateIf(IfStatementNode* node) {
 
     generateExpression(node->expression.get());
     emit("cmp rax, 0");
-    emit("je " + else_label);
+
+    if (node->else_statement) {
+        emit("je " + else_label);
+    }
+
+    else {
+        emit("je " + end_label);
+    }
 
     for (auto& stmt : node->body) {
         generateStatement(stmt.get());
     }
 
     emit("jmp " + end_label);
-    emitLabel(else_label);
 
     if (node->else_statement) {
+        emitLabel(else_label);
         for (auto& stmt : node->else_statement->body) {
             generateStatement(stmt.get());
         }
