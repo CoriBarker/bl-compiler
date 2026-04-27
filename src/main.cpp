@@ -2,6 +2,7 @@
 #include <sstream>
 #include <fstream>
 #include <string>
+#include <filesystem>
 
 #include "lexer.hpp"
 #include "parser.hpp"
@@ -324,14 +325,34 @@ int main(int argc, char* argv[]) {
         std::cout << "  No type errors found.\n";
     }
 
-    // -------- TYPE CHECKING --------
+    // -------- CODE GEN --------
     CodeGenerator code_gen(table);
-    std::string asm_file = filename.replace(filename.size() - 2, 2, 1, 's');
+    std::filesystem::path p(filename);
+    std::string stem = p.stem().string();
+    std::string asm_file = stem + ".s";
     code_gen.generate(ast.get(), asm_file);
 
     if (verbose) {
-        std::cout << "\n--- CODE GEN ---\n";
+        std::cout << "\n--- Code Gen ---\n";
         std::cout << "  Generated assembly: " << asm_file << "\n";
+    }
+
+    if (verbose) {
+        std::cout << "  Assembling file: " << asm_file << "\n";
+    }
+
+    std::string cmd = "as -o " + stem + ".o " + asm_file;
+    int res = system(cmd.c_str());
+    if (res != 0) {
+        std::cerr << "assembler failed\n";
+        exit(1);
+    }
+    
+    cmd = "ld -o " + stem + " " + stem + ".o";
+    res = system(cmd.c_str());
+    if (res != 0) {
+        std::cerr << "linker failed\n";
+        exit(1);
     }
 
     std::cout << "blc: compiled successfully\n";
