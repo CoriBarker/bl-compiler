@@ -328,7 +328,6 @@ Symbol* TypeChecker::lookupVariable(const std::string& name) {
             return &pair.second;
         }
     }
-    
 
     return nullptr;
 }
