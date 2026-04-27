@@ -4,16 +4,27 @@ CodeGenerator::CodeGenerator(SymbolTable& table) : table(table) {}
 
 void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
     output.open(filename);
+    label_counter = 0;
+
+    output << ".intel_syntax noprefix\n";
 
     for (auto& func : node->function_declarations) {
         output << ".global " << func->identifier << "\n";
     }
+
+    output << ".global _start\n";
 
     output << ".text\n\n";
 
     for (auto& func : node->function_declarations) {
         generateFunction(func.get());
     }
+
+    emitLabel("_start");
+    emit("call main");
+    emit("mov rdi, rax");
+    emit("mov rax, 60");
+    emit("syscall");
 
     output.close();
 }
