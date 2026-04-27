@@ -367,5 +367,7 @@ void CodeGenerator::generateFunctionCall(FunctionCallNode* node) {
         emit("mov " + arg_regs[i] + ", rax");
     }
 
+    emit("sub rsp, 8");
     emit("call " + node->identifier);
+    emit("add rsp, 8");
 }
