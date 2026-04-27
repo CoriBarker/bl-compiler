@@ -17,6 +17,7 @@ private:
     SymbolTable& table;
     std::vector<std::string> errors;
     Type current_function_return_type;
+    std::string current_function_name;
     
     void checkFunction(FunctionDeclarationNode* node);
     void checkStatement(ASTNode* node);
@@ -35,4 +36,5 @@ private:
 
     void error(const std::string& message, int line, int column);
     std::string typeToString(Type type);
+    Symbol* lookupVariable(const std::string& name);
 };

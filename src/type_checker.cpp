@@ -8,6 +8,7 @@ void TypeChecker::check(ProgramNode* node) {
     for (int i = 0; i < (int)functions.size(); i++) {
         auto& func = functions[i];
         current_function_return_type = func->return_type;
+        current_function_name = func->identifier;
 
         checkFunction(func.get());
     }
@@ -62,7 +63,8 @@ void TypeChecker::checkVariableDeclaration(VariableDeclarationNode* node) {
 }
 
 void TypeChecker::checkVariableAssignment(VariableAssignmentNode* node) {
-    Symbol* symbol = table.lookup(node->identifier);
+    Symbol* symbol = lookupVariable(node->identifier);
+    if (!symbol) return;
     Type left = symbol->type;
     Type right = inferType(node->value.get());
 
@@ -173,7 +175,7 @@ Type TypeChecker::inferType(ASTNode* node) {
 }
 
 Type TypeChecker::inferIdentifier(IdentifierNode* node) {
-    if (Symbol* symbol = table.lookup(node->value)) {
+    if (Symbol* symbol = lookupVariable(node->value)) {
         return symbol->type;
     }
 
@@ -266,7 +268,7 @@ Type TypeChecker::inferUnaryOp(UnaryOperationNode* node) {
 }
 
 Type TypeChecker::inferFunctionCall(FunctionCallNode* node) {
-    Symbol* symbol = table.lookup(node->identifier);
+    Symbol* symbol = lookupVariable(node->identifier);
     if (!symbol) return Type::VOID;
 
     if (node->arguments.size() != symbol->parameter_types.size()) {
@@ -308,4 +310,14 @@ std::string TypeChecker::typeToString(Type type) {
 
 std::vector<std::string> TypeChecker::getErrors() {
     return errors;
+}
+
+Symbol* TypeChecker::lookupVariable(const std::string& name) {
+    Symbol* symbol = table.lookupQualified(current_function_name + "::" + name);
+    if (symbol) return symbol;
+
+    symbol = table.lookupQualified("global::" + name);
+    if (symbol) return symbol;
+
+    return nullptr;
 }
