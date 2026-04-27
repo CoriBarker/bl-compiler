@@ -13,6 +13,16 @@ SymbolTable SymbolTableGenerator::generate(ProgramNode* program) {
 }
 
 void SymbolTableGenerator::visitProgram(ProgramNode* node) {
+    Symbol print_symbol;
+    print_symbol.name = "print";
+    print_symbol.qualified_name = "global::print";
+    print_symbol.kind = SymbolKind::FUNCTION;
+    print_symbol.type = Type::VOID;
+    print_symbol.parameter_types = { Type::INT };
+    print_symbol.line = 0;
+    print_symbol.column = 0;
+    table.define(print_symbol);
+
     for (int i = 0; i < (int)node->function_declarations.size(); i++) {
         auto& function = node->function_declarations[i];
         std::string name = function->identifier;
