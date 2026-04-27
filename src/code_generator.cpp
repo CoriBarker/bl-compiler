@@ -6,6 +6,9 @@ void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
     output.open(filename);
     label_counter = 0;
 
+    output << ".data\n";
+    output << ".int_fmt: .string \"%d\\n\"\n\n";
+
     output << ".intel_syntax noprefix\n";
 
     for (auto& func : node->function_declarations) {
@@ -19,12 +22,6 @@ void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
     for (auto& func : node->function_declarations) {
         generateFunction(func.get());
     }
-
-    emitLabel("_start");
-    emit("call main");
-    emit("mov rdi, rax");
-    emit("mov rax, 60");
-    emit("syscall");
 
     output.close();
 }
@@ -120,6 +117,10 @@ void CodeGenerator::generateStatement(ASTNode* node) {
 
     else if (auto* p = dynamic_cast<ReturnNode*>(node)) {
         generateReturn(p);
+    }
+
+    else if (auto* p = dynamic_cast<FunctionCallNode*>(node)) {
+        generateFunctionCall(p);
     }
 
     else if (auto* p = dynamic_cast<ForInitNode*>(node)) {
@@ -358,6 +359,15 @@ void CodeGenerator::generateUnaryOp(UnaryOperationNode* node) {
 }
 
 void CodeGenerator::generateFunctionCall(FunctionCallNode* node) {
+    if (node->identifier == "print") {
+        generateExpression(node->arguments[0].get());
+        emit("lea rdi, [rip + .int_fmt]");
+        emit("mov rsi, rax");
+        emit("mov rax, 0");
+        emit("call printf");
+        return;
+    }
+
     static const std::vector<std::string> arg_regs = {
         "rdi", "rsi", "rdx", "rcx", "r8", "r9"
     };
