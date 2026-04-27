@@ -121,20 +121,38 @@ void CodeGenerator::generateStatement(ASTNode* node) {
     else if (auto* p = dynamic_cast<ReturnNode*>(node)) {
         generateReturn(p);
     }
+
+    else if (auto* p = dynamic_cast<ForInitNode*>(node)) {
+        if (p->type != Type::VOID) {
+            if (p->expression) {
+                generateExpression(p->expression.get());
+                int offset = getOffset(p->identifier);
+                emit("mov QWORD PTR [rbp + " + std::to_string(offset) + "], rax");
+            }
+        }
+
+        else {
+            if (p->expression) {
+                generateExpression(p->expression.get());
+                int offset = getOffset(p->identifier);
+                emit("mov QWORD PTR [rbp + " + std::to_string(offset) + "], rax"); 
+            }
+        }
+    }
 }
 
 void CodeGenerator::generateVariableDeclaration(VariableDeclarationNode* node) {
     if (node->value) {
         generateExpression(node->value.get());
         int offset = getOffset(node->identifier);
-        emit("mov [rbp + " + std::to_string(offset) + "], rax");
+        emit("mov QWORD PTR [rbp + " + std::to_string(offset) + "], rax");
     }
 }
 
 void CodeGenerator::generateVariableAssignment(VariableAssignmentNode* node) {
     generateExpression(node->value.get());
     int offset = getOffset(node->identifier);
-    emit("mov [rbp + " + std::to_string(offset) + "], rax");
+    emit("mov QWORD PTR [rbp + " + std::to_string(offset) + "], rax");
 }
 
 void CodeGenerator::generateReturn(ReturnNode* node) {
