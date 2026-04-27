@@ -6,6 +6,9 @@ Written as A-Level project, compiler for the bl programming language.
 Requirements
 ------------
 - make
+- gcc
+- as
+- (optional) autoconf, automake, m4
 
 
 Building
