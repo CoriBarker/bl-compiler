@@ -6,6 +6,7 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "symbol_table_generator.hpp"
+#include "type_checker.hpp"
 
 // ---------------- HELPERS ----------------
 std::string toString(Type type) {
@@ -303,6 +304,26 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    // -------- TYPE CHECKING --------
+    TypeChecker type_checker(table);
+    type_checker.check(ast.get());
+    
+    auto type_errors = type_checker.getErrors();
+    if (!type_errors.empty()) {
+        std::cout << "\n";
+        for (const auto& err : type_errors) {
+            std::cerr << err;
+        }
+        std::cerr << "\nblc: " << type_errors.size() << " type error(s) found. compilation stopped.\n";
+        return 1;
+    }
+    
+    if (verbose) {
+        std::cout << "\n--- Type Check ---\n";
+        std::cout << "  No type errors found.\n";
+    }
+
     std::cout << "blc: compiled successfully\n";
+    std::cout << "[DEBUG] reaching return 0\n";
     return 0;
 }
