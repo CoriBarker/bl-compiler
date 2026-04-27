@@ -19,12 +19,13 @@ private:
     std::string current_function;
     std::unordered_map<std::string, int> offsets;
     int current_offset;
+    std::string return_label;
 
     void emit(const std::string& line);
     void emitLabel(const std::string& label);
     std::string newLabel(const std::string& prefix);
 
-    void builOffsetMap(const std::string& function_name);
+    void buildOffsetMap(const std::string& function_name);
     int getOffset(const std::string& name);
 
     void generateFunction(FunctionDeclarationNode* node);
