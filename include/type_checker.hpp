@@ -27,7 +27,9 @@ private:
     void checkFor(ForStatementNode* node);
 
     Type inferType(ASTNode* node);
+    Type inferIdentifier(IdentifierNode* node);
     Type inferBinaryOp(BinaryOperationNode* node);
+    Type inferUnaryOp(UnaryOperationNode* node);
     Type inferFunctionCall(FunctionCallNode* node);
 
     void error(const std::string& message, int line, int column);
