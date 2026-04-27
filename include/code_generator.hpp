@@ -1,6 +1,11 @@
 #pragma once
 
 #include "symbol_table.hpp"
+#include "ast_node.hpp"
+
+#include <fstream>
+#include <unorderd_map>
+#include <string>
 
 class CodeGenerator {
 public:
