@@ -318,9 +318,22 @@ void CodeGenerator::generateBinaryOp(BinaryOperationNode* node) {
     }
 
     else if (node->operation == "&&") {
-        emit("and rax, rcx");
-        emit("setne al");
-        emit("movzx rax, al");
+        std::string false_label = newLabel("and_false");
+        std::string end_label = newLabel("and_end");
+        
+        emit("cmp rax, 0");
+        emit("je " + false_label);
+        
+        emit("cmp rcx, 0");
+        emit("je " + false_label);
+        
+        emit("mov rax, 1");
+        emit("jmp " + end_label);
+        
+        emitLabel(false_label);
+        emit("mov rax, 0");
+        
+        emitLabel(end_label);
     }
 
     else if (node->operation == "||") {
