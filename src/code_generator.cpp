@@ -73,10 +73,19 @@ void CodeGenerator::generateFunction(FunctionDeclarationNode* node) {
 
     buildOffsetMap(current_function);
     emitLabel(current_function);
+
     emit("push rbp");
     emit("mov rbp, rsp");
     int stack_size = ((-current_offset + 15) / 16) * 16;
     emit("sub rsp, " + std::to_string(stack_size));
+
+    static const std::vector<std::string> arg_regs = {
+        "rdi", "rsi", "rdx", "rcx", "r8", "r9"
+    };
+
+    for (size_t i = 0; i < node->parameters.size(); i++) {
+        emit("mov QWORD PTR [rbp + " + std::to_string(getOffset(node->parameters[i]->identifier)) + "], " + arg_regs[i]);
+    }
 
     for (int i = 0; i < (int)node->body.size(); i++) {
         generateStatement(node->body[i].get());
