@@ -5,7 +5,8 @@ blc_SOURCES = \
     lexer.cpp \
     parser.cpp \
 	symbol_table.cpp \
-	symbol_table_generator.cpp
+	symbol_table_generator.cpp \
+	type_checker.cpp
 
 AM_CXXFLAGS = \
     -std=c++17 \

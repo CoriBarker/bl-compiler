@@ -102,7 +102,8 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_blc_OBJECTS = main.$(OBJEXT) lexer.$(OBJEXT) parser.$(OBJEXT) \
-	symbol_table.$(OBJEXT) symbol_table_generator.$(OBJEXT)
+	symbol_table.$(OBJEXT) symbol_table_generator.$(OBJEXT) \
+	type_checker.$(OBJEXT)
 blc_OBJECTS = $(am_blc_OBJECTS)
 blc_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -122,7 +123,8 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/lexer.Po ./$(DEPDIR)/main.Po \
 	./$(DEPDIR)/parser.Po ./$(DEPDIR)/symbol_table.Po \
-	./$(DEPDIR)/symbol_table_generator.Po
+	./$(DEPDIR)/symbol_table_generator.Po \
+	./$(DEPDIR)/type_checker.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -256,7 +258,8 @@ blc_SOURCES = \
     lexer.cpp \
     parser.cpp \
 	symbol_table.cpp \
-	symbol_table_generator.cpp
+	symbol_table_generator.cpp \
+	type_checker.cpp
 
 AM_CXXFLAGS = -std=c++17 -I$(top_srcdir)/include -Wall -Wextra \
 	-Wpedantic $(am__append_1) $(am__append_2)
@@ -351,6 +354,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/symbol_table.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/symbol_table_generator.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/type_checker.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -505,6 +509,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/parser.Po
 	-rm -f ./$(DEPDIR)/symbol_table.Po
 	-rm -f ./$(DEPDIR)/symbol_table_generator.Po
+	-rm -f ./$(DEPDIR)/type_checker.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -555,6 +560,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/parser.Po
 	-rm -f ./$(DEPDIR)/symbol_table.Po
 	-rm -f ./$(DEPDIR)/symbol_table_generator.Po
+	-rm -f ./$(DEPDIR)/type_checker.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
