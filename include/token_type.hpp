@@ -43,6 +43,8 @@ enum class TokenType {
     RIGHT_BRACKET,
     LEFT_BRACE,
     RIGHT_BRACE,
+    LEFT_SQUARE,
+    RIGHT_SQUARE,
     COMMA,
 
     END_OF_FILE,

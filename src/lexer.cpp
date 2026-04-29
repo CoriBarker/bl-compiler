@@ -195,6 +195,14 @@ std::vector<Token> Lexer::tokenise() {
 
             tokens.push_back(Token(TokenType::STRING_LITERAL, s, l, c));
 
+        } else if (src[position] == '[') {
+            tokens.push_back(Token(TokenType::LEFT_SQUARE, std::string(1, src[position]), line, column));
+            advance();
+
+        } else if (src[position] == ']') {
+            tokens.push_back(Token(TokenType::RIGHT_SQUARE, std::string(1, src[position]), line, column));
+            advance();
+
         } else if (position+1 < src.size() && src[position] == '&' && src[position+1] == '&') {
             tokens.push_back(Token(TokenType::AND, "&&", line, column));
             advance();
