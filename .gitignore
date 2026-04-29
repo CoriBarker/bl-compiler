@@ -1,5 +1,23 @@
-*.cache
+# build output
 build/
+bin/
+bl_sources/bin
+dist/
+
+# backups
 *~
+.#*
+*.swp
+
+# assembly + objects
+*.s
+*.o
+
+# binaries
+*.out
+
+# autotools
 aclocal.m4
-#*
+
+# cache
+*.cache
