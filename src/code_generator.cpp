@@ -6,9 +6,6 @@ void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
     output.open(filename);
     label_counter = 0;
 
-    output << ".data\n";
-    output << ".int_fmt: .string \"%lld\\n\"\n\n";
-
     output << ".intel_syntax noprefix\n";
 
     for (auto& func : node->function_declarations) {
@@ -16,11 +13,16 @@ void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
     }
 
     output << ".global _start\n";
-
     output << ".text\n\n";
 
     for (auto& func : node->function_declarations) {
         generateFunction(func.get());
+    }
+
+    output << ".section .rodata\n";
+    output << ".int_fmt: .string \"%lld\\n\"\n";
+    for (auto& s : rodata_strings) {
+        output << s.label << ": .string \"" << s.value << "\"\n";
     }
 
     output.close();
@@ -253,6 +255,12 @@ void CodeGenerator::generateExpression(ASTNode* node) {
 
     else if (auto* p = dynamic_cast<NumberLiteralNode*>(node)) {
         emit("mov rax, " + std::to_string(p->value));
+    }
+
+    else if (auto* p = dynamic_cast<StringLiteralNode*>(node)) {
+        std::string label = ".str" + std::to_string(string_counter++);
+        rodata_strings.push_back({ label, p->value });
+        emit("lea rax, [rip + " + label + "]");
     }
 }
 

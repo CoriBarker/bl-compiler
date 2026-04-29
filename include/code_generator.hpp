@@ -7,6 +7,11 @@
 #include <unordered_map>
 #include <string>
 
+struct RodataString {
+    std::string label;
+    std::string value;
+};
+
 class CodeGenerator {
 public:
     CodeGenerator(SymbolTable& table);
@@ -20,6 +25,8 @@ private:
     std::unordered_map<std::string, int> offsets;
     int current_offset;
     std::string return_label;
+    std::vector<RodataString> rodata_strings;
+    int string_counter = 0;
 
     void emit(const std::string& line);
     void emitLabel(const std::string& label);
