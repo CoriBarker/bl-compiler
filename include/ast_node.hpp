@@ -93,7 +93,7 @@ class StringLiteralNode : public ASTNode {
 public:
     std::string value;
 
-    StringLiteralNode() {}
+    StringLiteralNode(std::string value) : value(value) {}
 };
 
 class NumberLiteralNode : public ASTNode {

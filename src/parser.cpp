@@ -467,6 +467,19 @@ std::unique_ptr<ASTNode> Parser::parsePrimary() {
         return number;
     }
 
+    case TokenType::STRING_LITERAL: {
+        value = peek().value;
+        line = peek().line;
+        column = peek().column;
+        advance();
+
+        auto s = std::make_unique<StringLiteralNode>(value);
+        s->line = line;
+        s->column = column;
+
+        return s;
+    }
+
     case TokenType::TRUE:
     case TokenType::FALSE: {
         value = peek().value;
