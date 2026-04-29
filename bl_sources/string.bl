@@ -1,0 +1,5 @@
+function main() -> int {
+    string s = "hello world";
+    print(3);
+    return 0;
+}
