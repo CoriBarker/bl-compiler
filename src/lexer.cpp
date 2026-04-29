@@ -175,19 +175,22 @@ std::vector<Token> Lexer::tokenise() {
         } else if (src[position] == '"') {
             int l = line;
             int c = column;
-            std::string s = "" + src[position];
             advance();
 
-            while (src[position] != '"') {
-                if (src[position] == '/' && src[position+1] == '"') {
-                    s += src[position];
+            std::string s;
+
+            while (position < src.size() && src[position] != '"') {
+                if (src[position] == '\\' && position+1 < src.size() && src[position+1] == '"') {
+                    s += '"';
+                    advance();
                     advance();
                 }
 
-                s += src[position];
-                advance();
+                else {
+                    s += src[position];
+                    advance();
+                }
             }
-            s += src[position];
             advance();
 
             tokens.push_back(Token(TokenType::STRING_LITERAL, s, l, c));
