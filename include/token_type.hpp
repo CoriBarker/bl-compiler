@@ -7,6 +7,7 @@ enum class TokenType {
     FUNCTION,
 
     NUMBER,
+    STRING_LITERAL,
     TRUE,
     FALSE,
     IDENTIFIER,

@@ -27,6 +27,12 @@ std::vector<Token> Lexer::tokenise() {
                     advance();
                 }
 
+            } else if (src.substr(position, 6) == "string" && !std::isalnum(src[position+6]) && src[position+6] != '_') {
+                tokens.push_back(Token(TokenType::STRING, "string", line, column));
+                for (int i=0; i<6; i++) {
+                    advance();
+                }
+
             } else if (src.substr(position, 8) == "function" && !std::isalnum(src[position+8]) && src[position+8] != '_') {
                 tokens.push_back(Token(TokenType::FUNCTION, "function", line, column));
                 for (int i=0; i<8; i++) {
@@ -165,6 +171,26 @@ std::vector<Token> Lexer::tokenise() {
         } else if (src[position] == ',') {
             tokens.push_back(Token(TokenType::COMMA, std::string(1, src[position]), line, column));
             advance();
+
+        } else if (src[position] == '"') {
+            int l = line;
+            int c = column;
+            std::string s = "" + src[position];
+            advance();
+
+            while (src[position] != '"') {
+                if (src[position] == '/' && src[position+1] == '"') {
+                    s += src[position];
+                    advance();
+                }
+
+                s += src[position];
+                advance();
+            }
+            s += src[position];
+            advance();
+
+            tokens.push_back(Token(TokenType::STRING_LITERAL, s, l, c));
 
         } else if (position+1 < src.size() && src[position] == '&' && src[position+1] == '&') {
             tokens.push_back(Token(TokenType::AND, "&&", line, column));
