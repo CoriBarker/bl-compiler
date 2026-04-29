@@ -460,7 +460,7 @@ std::unique_ptr<ASTNode> Parser::parsePrimary() {
         column = peek().column;
         advance();
 
-        auto number = std::make_unique<NumberLiteralNode>(std::stoi(value));
+        auto number = std::make_unique<NumberLiteralNode>(std::stoll(value));
         number->line = line;
         number->column = column;
 

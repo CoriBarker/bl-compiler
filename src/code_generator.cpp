@@ -7,7 +7,7 @@ void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
     label_counter = 0;
 
     output << ".data\n";
-    output << ".int_fmt: .string \"%d\\n\"\n\n";
+    output << ".int_fmt: .string \"%lld\\n\"\n\n";
 
     output << ".intel_syntax noprefix\n";
 

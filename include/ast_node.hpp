@@ -98,9 +98,9 @@ public:
 
 class NumberLiteralNode : public ASTNode {
 public:
-    int value;
+    long long value;
 
-    NumberLiteralNode(int value) : value(value) {}
+    NumberLiteralNode(long long value) : value(value) {}
 };
 
 class BooleanLiteralNode : public ASTNode {
