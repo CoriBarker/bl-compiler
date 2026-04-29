@@ -1,0 +1,27 @@
+function arctan(int x, int scale) -> int {
+    int result = scale / x;
+    int term = scale / x;
+    int k = 1;
+    int sign = 0 - 1;
+    for (;;) {
+        term = term / (x * x);
+        if (term == 0) { return result; }
+        int contribution = term / (2 * k + 1);
+        if (contribution == 0) { return result; }
+        if (sign < 0) {
+            result = result - contribution;
+        } else {
+            result = result + contribution;
+        }
+        sign = 0 - sign;
+        k = k + 1;
+    }
+}
+
+function main() -> int {
+    int SCALE = 1000000000000000000;
+    int pi4 = 4 * arctan(5, SCALE) - arctan(239, SCALE);
+    int pi = 4 * pi4;
+    print(pi);
+    return 0;
+}
