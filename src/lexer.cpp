@@ -142,6 +142,10 @@ std::vector<Token> Lexer::tokenise() {
                 advance();
             }
 
+        } else if (src[position] == '%') {
+            tokens.push_back(Token(TokenType::MOD, std::string(1, src[position]), line, column));
+            advance();
+
         } else if (src[position] == '(') {
             tokens.push_back(Token(TokenType::LEFT_BRACKET, std::string(1, src[position]), line, column));
             advance();
