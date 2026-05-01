@@ -21,3 +21,6 @@ aclocal.m4
 
 # cache
 *.cache
+
+# testing
+testing/
