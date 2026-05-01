@@ -1,52 +1,50 @@
 #pragma once
 
+#define TOKEN_TYPES \
+    X(INT) \
+    X(STRING) \
+    X(BOOL) \
+    X(FUNCTION) \
+    X(NUMBER) \
+    X(STRING_LITERAL) \
+    X(TRUE) \
+    X(FALSE) \
+    X(IDENTIFIER) \
+    X(IF) \
+    X(ELSE) \
+    X(ELSE_IF) \
+    X(WHILE) \
+    X(FOR) \
+    X(RETURN) \
+    X(PLUS) \
+    X(MINUS) \
+    X(MULTIPLY) \
+    X(DIVIDE) \
+    X(MOD) \
+    X(EQUAL) \
+    X(NOT_EQUAL) \
+    X(LESS_EQUAL) \
+    X(GREATER_EQUAL) \
+    X(LESS) \
+    X(GREATER) \
+    X(OR) \
+    X(AND) \
+    X(NOT) \
+    X(ASSIGN) \
+    X(ARROW) \
+    X(SEMICOLON) \
+    X(COMMA) \
+    X(LEFT_BRACKET) \
+    X(RIGHT_BRACKET) \
+    X(LEFT_BRACE) \
+    X(RIGHT_BRACE) \
+    X(LEFT_SQUARE) \
+    X(RIGHT_SQUARE) \
+    X(END_OF_FILE) \
+    X(INVALID)
+
 enum class TokenType {
-    INT,
-    STRING,
-    BOOL,
-    FUNCTION,
-
-    NUMBER,
-    STRING_LITERAL,
-    TRUE,
-    FALSE,
-    IDENTIFIER,
-
-    IF,
-    ELSE,
-    ELSE_IF,
-    WHILE,
-    FOR,
-    RETURN,
-
-    PLUS,
-    MINUS,
-    MULTIPLY,
-    DIVIDE,
-    MOD,
-    EQUAL,
-    NOT_EQUAL,
-    LESS_EQUAL,
-    GREATER_EQUAL,
-    LESS,
-    GREATER,
-
-    OR,
-    AND,
-    NOT,
-
-    ASSIGN,
-    ARROW,
-
-    SEMICOLON,
-    LEFT_BRACKET,
-    RIGHT_BRACKET,
-    LEFT_BRACE,
-    RIGHT_BRACE,
-    LEFT_SQUARE,
-    RIGHT_SQUARE,
-    COMMA,
-
-    END_OF_FILE,
-    INVALID,
+#define X(name) name,
+    TOKEN_TYPES
+#undef X
 };
