@@ -152,8 +152,8 @@ void SymbolTableGenerator::visitArrayDeclaration(ArrayDeclarationNode* node) {
     if (auto* p = dynamic_cast<NumberLiteralNode*>(node->size_expr.get())) {
         symbol.array_size = p->value;
     }
-    else {
-        symbol.array_size = 0;
+    else if (node->elements) {
+        symbol.array_size = (int)node->elements->value.size();
     }
 
     table.define(symbol);
