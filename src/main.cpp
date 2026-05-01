@@ -356,6 +356,5 @@ int main(int argc, char* argv[]) {
     }
 
     std::cout << "blc: compiled successfully\n";
-    std::cout << "[DEBUG] reaching return 0\n";
     return 0;
 }
