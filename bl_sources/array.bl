@@ -1,6 +1,10 @@
 function main() -> int {
-    int y[5];
+    string str = "World!";
+    string x[2];
+    x[0] = "Hello, ";
+    x[1] = str;
 
+    int y[5];
     int z[] = [1, 2, 3, 4];
 
     return 0;
