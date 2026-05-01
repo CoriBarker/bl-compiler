@@ -1,5 +1,7 @@
 #include "code_generator.hpp"
 
+#include <iostream>
+
 CodeGenerator::CodeGenerator(SymbolTable& table) : table(table) {}
 
 void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
@@ -44,17 +46,18 @@ std::string CodeGenerator::newLabel(const std::string& prefix) {
 void CodeGenerator::buildOffsetMap(const std::string& function_name) {
     offsets.clear();
     current_offset = 0;
-
     for (auto& pair : table.symbols) {
         const Symbol& symbol = pair.second;
-
         if (symbol.kind == SymbolKind::FUNCTION) continue;
-
         std::string prefix = function_name + "::";
         if (symbol.qualified_name.substr(0, prefix.size()) != prefix) continue;
-
-        current_offset -= 8;
+        if (symbol.kind == SymbolKind::ARRAY) {
+            current_offset -= symbol.array_size * 8;
+        } else {
+            current_offset -= 8;
+        }
         offsets[symbol.name] = current_offset;
+        std::cerr << symbol.name << " -> " << current_offset << " (array_size=" << symbol.array_size << ")\n";
     }
 }
 
@@ -99,6 +102,14 @@ void CodeGenerator::generateFunction(FunctionDeclarationNode* node) {
 void CodeGenerator::generateStatement(ASTNode* node) {
     if (auto* p = dynamic_cast<VariableDeclarationNode*>(node)) {
         generateVariableDeclaration(p);
+    }
+
+    else if (auto* p = dynamic_cast<ArrayDeclarationNode*>(node)) {
+        generateArrayDeclaration(p);
+    }
+
+    else if (auto* p = dynamic_cast<ArrayAssignmentNode*>(node)) {
+        generateArrayAssignment(p);
     }
 
     else if (auto* p = dynamic_cast<VariableAssignmentNode*>(node)) {
@@ -152,10 +163,40 @@ void CodeGenerator::generateVariableDeclaration(VariableDeclarationNode* node) {
     }
 }
 
+void CodeGenerator::generateArrayDeclaration(ArrayDeclarationNode* node) {
+    int base = getOffset(node->identifier);
+    if (node->elements) {
+        auto* literal = dynamic_cast<ArrayLiteralNode*>(node->elements.get());
+        for (int i = 0; i < (int)literal->value.size(); i++) {
+            generateExpression(literal->value[i].get());
+            emit("mov QWORD PTR [rbp + " + std::to_string(base + i * 8) + "], rax");
+        }
+    }
+    else {
+        auto* size_literal = dynamic_cast<NumberLiteralNode*>(node->size_expr.get());
+        for (int i = 0; i < size_literal->value; i++) {
+            emit("mov QWORD PTR [rbp + " + std::to_string(base + i * 8) + "], 0");
+        }
+    }
+}
+
 void CodeGenerator::generateVariableAssignment(VariableAssignmentNode* node) {
     generateExpression(node->value.get());
     int offset = getOffset(node->identifier);
     emit("mov QWORD PTR [rbp + " + std::to_string(offset) + "], rax");
+}
+
+void CodeGenerator::generateArrayAssignment(ArrayAssignmentNode* node) {
+    int base = getOffset(node->identifier);
+
+    generateExpression(node->value.get());
+    emit("push rax");
+
+    generateExpression(node->index.get());
+    emit("imul rax, rax, 8");
+    emit("lea rcx, [rbp + " + std::to_string(base) + "]");
+    emit("pop rdx");
+    emit("mov [rcx + rax], rdx");
 }
 
 void CodeGenerator::generateReturn(ReturnNode* node) {
@@ -261,6 +302,10 @@ void CodeGenerator::generateExpression(ASTNode* node) {
         std::string label = ".str" + std::to_string(string_counter++);
         rodata_strings.push_back({ label, p->value });
         emit("lea rax, [rip + " + label + "]");
+    }
+
+    else if (auto* p = dynamic_cast<ArrayAccessNode*>(node)) {
+        generateArrayAccess(p);
     }
 }
 
@@ -388,4 +433,13 @@ void CodeGenerator::generateFunctionCall(FunctionCallNode* node) {
     emit("sub rsp, 8");
     emit("call " + node->identifier);
     emit("add rsp, 8");
+}
+
+void CodeGenerator::generateArrayAccess(ArrayAccessNode* node) {
+    int base = getOffset(node->identifier);
+
+    generateExpression(node->index.get());
+    emit("imul rax, rax, 8");
+    emit("lea rcx, [rbp + " + std::to_string(base) + "]");
+    emit("mov rax, [rcx + rax]");
 }
