@@ -1,0 +1,14 @@
+function main() -> int {
+    int x[] = [10, 20, 30];
+    int y[3];
+    y[0] = 100;
+    y[1] = 200;
+    y[2] = 300;
+    print(x[0]);
+    print(x[1]);
+    print(x[2]);
+    print(y[0]);
+    print(y[1]);
+    print(y[2]);
+    return 0;
+}

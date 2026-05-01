@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <cstdint>
 
 class ASTNode {
 public:
@@ -18,6 +19,7 @@ class ParameterNode : public ASTNode {
 public:
     Type type;
     std::string identifier;
+    bool is_array = false;
 
     ParameterNode() {}
 };
@@ -27,6 +29,7 @@ public:
     std::string identifier;
     std::vector<std::unique_ptr<ParameterNode>> parameters;
     Type return_type;
+    bool return_array = false;
     std::vector<std::unique_ptr<ASTNode>> body;
 
     FunctionDeclarationNode() {}
@@ -98,9 +101,9 @@ public:
 
 class NumberLiteralNode : public ASTNode {
 public:
-    long long value;
+    int64_t value;
 
-    NumberLiteralNode(long long value) : value(value) {}
+    NumberLiteralNode(int64_t value) : value(value) {}
 };
 
 class BooleanLiteralNode : public ASTNode {
@@ -108,6 +111,40 @@ public:
     std::string value;
 
     BooleanLiteralNode(const std::string& value) : value(value) {}
+};
+
+class ArrayLiteralNode : public ASTNode {
+public:
+    std::vector<std::unique_ptr<ASTNode>> value;
+
+    ArrayLiteralNode(std::vector<std::unique_ptr<ASTNode>> value) : value(std::move(value)) {}
+};
+
+class ArrayDeclarationNode : public ASTNode {
+public:
+    std::string identifier;
+    Type element_type;
+    std::unique_ptr<ASTNode> size_expr = nullptr;
+    std::unique_ptr<ArrayLiteralNode> elements = nullptr;
+
+    ArrayDeclarationNode() {}
+};
+
+class ArrayAccessNode : public ASTNode {
+public:
+    std::string identifier;
+    std::unique_ptr<ASTNode> index;
+
+    ArrayAccessNode() {}
+};
+
+class ArrayAssignmentNode : public ASTNode {
+public:
+    std::string identifier;
+    std::unique_ptr<ASTNode> index;
+    std::unique_ptr<ASTNode> value;
+
+    ArrayAssignmentNode() {}
 };
 
 class ElseStatementNode : public ASTNode {

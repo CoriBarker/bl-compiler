@@ -110,12 +110,18 @@ std::unique_ptr<ASTNode> Parser::parseStatement() {
     case TokenType::INT:
     case TokenType::BOOL:
     case TokenType::STRING:
+        if (tokens[position+1].type == TokenType::IDENTIFIER && tokens[position+2].type == TokenType::LEFT_SQUARE) {
+            return parseArrayDeclaration();
+        }
         return  parseVariableDeclaration();
 
     case TokenType::IDENTIFIER:
         switch (tokens[position+1].type) {
         case TokenType::ASSIGN:
             return parseVariableAssignment();
+
+        case TokenType::LEFT_SQUARE:
+            return parseArrayAssignment();
 
         default:
             return parseExpressionStatement();
@@ -146,24 +152,52 @@ std::unique_ptr<ASTNode> Parser::parseStatement() {
 
 std::unique_ptr<VariableDeclarationNode> Parser::parseVariableDeclaration() {
     auto variable_declaration = std::make_unique<VariableDeclarationNode>();
-
-    variable_declaration->type = parseType();
-
     variable_declaration->line = peek().line;
     variable_declaration->column = peek().column;
+    variable_declaration->type = parseType();
 
     expect(TokenType::IDENTIFIER, "as name of variable");
     variable_declaration->identifier = tokens[position-1].value;
 
     if (peek().type == TokenType::ASSIGN) {
         advance();
-
         variable_declaration->value = parseExpression();
     }
-
     expect(TokenType::SEMICOLON, "after variable declaration");
-
     return variable_declaration;
+}
+
+std::unique_ptr<ArrayDeclarationNode> Parser::parseArrayDeclaration() {
+    auto arr = std::make_unique<ArrayDeclarationNode>();
+    arr->line = peek().line;
+    arr->column = peek().column;
+
+    arr->element_type = parseType();
+
+    expect(TokenType::IDENTIFIER, "as name of array");
+    arr->identifier = tokens[position-1].value;
+
+    expect(TokenType::LEFT_SQUARE, "after name of array");
+
+    if (peek().type != TokenType::RIGHT_SQUARE) {
+        arr->size_expr = parseExpression();
+    }
+
+    expect(TokenType::RIGHT_SQUARE, "after array size");
+
+    if (peek().type == TokenType::ASSIGN) {
+        advance();
+        arr->elements = parseArrayLiteral();
+    }
+
+    expect(TokenType::SEMICOLON, "after array declaration");
+
+    if ((arr->size_expr == nullptr) == (arr->elements == nullptr)) {
+        error("array must have either a size or a literal value, not both or neither", arr->line, arr->column);
+        return nullptr;
+    }
+
+    return arr;
 }
 
 std::unique_ptr<VariableAssignmentNode> Parser::parseVariableAssignment() {
@@ -181,6 +215,53 @@ std::unique_ptr<VariableAssignmentNode> Parser::parseVariableAssignment() {
     expect(TokenType::SEMICOLON, "after variable assignment");
 
     return variable_assignment;
+}
+
+std::unique_ptr<ArrayAssignmentNode> Parser::parseArrayAssignment() {
+    auto arr = std::make_unique<ArrayAssignmentNode>();
+    arr->line = peek().line;
+    arr->column = peek().column;
+
+    expect(TokenType::IDENTIFIER, "as array name");
+    arr->identifier = tokens[position-1].value;
+
+    expect(TokenType::LEFT_SQUARE, "after array name");
+
+    if (peek().type != TokenType::RIGHT_SQUARE) {
+        arr->index = parseExpression();
+    }
+
+    expect(TokenType::RIGHT_SQUARE, "after array index");
+
+    expect(TokenType::ASSIGN, "after array");
+
+    if (peek().type == TokenType::LEFT_SQUARE) {
+        arr->value = parseArrayLiteral();
+    }
+
+    else {
+        arr->value = parseExpression();
+    }
+
+    expect(TokenType::SEMICOLON, "after array assignment");
+
+    return arr;
+}
+
+std::unique_ptr<ArrayAccessNode> Parser::parseArrayAccess() {
+    auto arr = std::make_unique<ArrayAccessNode>();
+    arr->line = peek().line;
+    arr->column = peek().column;
+
+    expect(TokenType::IDENTIFIER, "as name of array");
+    arr->identifier = tokens[position-1].value;
+
+    expect(TokenType::LEFT_SQUARE, "after name of array");
+
+    arr->index = parseExpression();
+
+    expect(TokenType::RIGHT_SQUARE, "after array index");
+    return arr;
 }
 
 std::unique_ptr<ReturnNode> Parser::parseReturnStatement() {
@@ -499,6 +580,10 @@ std::unique_ptr<ASTNode> Parser::parsePrimary() {
             return parseFunctionCall();
         }
 
+        if (tokens[position + 1].type == TokenType::LEFT_SQUARE) {
+            return parseArrayAccess();
+        }
+
         value = peek().value;
         line = peek().line;
         column = peek().column;
@@ -526,6 +611,29 @@ std::unique_ptr<ASTNode> Parser::parsePrimary() {
         return nullptr;
     }
     }
+}
+
+std::unique_ptr<ArrayLiteralNode> Parser::parseArrayLiteral() {
+    int line = peek().line;
+    int column = peek().column;
+    std::vector<std::unique_ptr<ASTNode>> elements;
+
+    expect(TokenType::LEFT_SQUARE, "at start of array literal");
+
+    while (peek().type != TokenType::RIGHT_SQUARE) {
+        elements.push_back(std::move(parseExpression()));
+        if (peek().type == TokenType::RIGHT_SQUARE) {
+            break;
+        }
+        expect(TokenType::COMMA, "between elements in array literal");
+    }
+    advance();
+
+    auto arr_lit = std::make_unique<ArrayLiteralNode>(std::move(elements));
+    arr_lit->line = line;
+    arr_lit->column = column;
+
+    return arr_lit;
 }
 
 std::unique_ptr<FunctionCallNode> Parser::parseFunctionCall() {

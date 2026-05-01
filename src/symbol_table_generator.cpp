@@ -75,27 +75,35 @@ void SymbolTableGenerator::visitFunctionDeclaration(FunctionDeclarationNode* nod
 }
 
 void SymbolTableGenerator::visitStatement(ASTNode* node) {
-    if (auto p = dynamic_cast<VariableDeclarationNode*>(node)) {
+    if (auto* p = dynamic_cast<VariableDeclarationNode*>(node)) {
         visitVariableDeclaration(p);
     }
 
-    else if (auto p = dynamic_cast<VariableAssignmentNode*>(node)) {
+    else if (auto* p = dynamic_cast<ArrayDeclarationNode*>(node)) {
+        visitArrayDeclaration(p);
+    }
+
+    else if (auto* p = dynamic_cast<VariableAssignmentNode*>(node)) {
         visitVariableAssignment(p);
     }
 
-    else if (auto p = dynamic_cast<IfStatementNode*>(node)) {
+    else if (auto* p = dynamic_cast<ArrayAssignmentNode*>(node)) {
+        visitArrayAssignment(p);
+    }
+
+    else if (auto* p = dynamic_cast<IfStatementNode*>(node)) {
         visitIfStatement(p);
     }
 
-    else if (auto p = dynamic_cast<WhileStatementNode*>(node)) {
+    else if (auto* p = dynamic_cast<WhileStatementNode*>(node)) {
         visitWhileStatement(p);
     }
     
-    else if (auto p = dynamic_cast<ForStatementNode*>(node)) {
+    else if (auto* p = dynamic_cast<ForStatementNode*>(node)) {
         visitForStatement(p);
     }
 
-    else if (auto p = dynamic_cast<ReturnNode*>(node)) {
+    else if (auto* p = dynamic_cast<ReturnNode*>(node)) {
         if (p->expression) {
             visitExpression(p->expression.get());
         }
@@ -125,7 +133,46 @@ void SymbolTableGenerator::visitVariableDeclaration(VariableDeclarationNode* nod
     }
 }
 
+void SymbolTableGenerator::visitArrayDeclaration(ArrayDeclarationNode* node) {
+    if (table.lookupCurrent(node->identifier)) {
+        error("'" + node->identifier + "' is already declared in this scope", node->line, node->column);
+        return;
+    }
+
+    std::string qualified_name = table.scopes.back()->scope_name + "::" + node->identifier;
+
+    Symbol symbol;
+    symbol.name = node->identifier;
+    symbol.qualified_name = qualified_name;
+    symbol.kind = SymbolKind::ARRAY;
+    symbol.type = node->element_type;
+    symbol.line = node->line;
+    symbol.column = node->column;
+
+    if (auto* p = dynamic_cast<NumberLiteralNode*>(node->size_expr.get())) {
+        symbol.array_size = p->value;
+    }
+    else if (node->elements) {
+        symbol.array_size = (int)node->elements->value.size();
+    }
+
+    table.define(symbol);
+
+    if (node->elements) {
+        visitExpression(node->elements.get());
+    }
+}
+
 void SymbolTableGenerator::visitVariableAssignment(VariableAssignmentNode* node) {
+    if (!table.lookup(node->identifier)) {
+        error("'" + node->identifier + "' is undefined", node->line, node->column);
+        return;
+    }
+
+    visitExpression(node->value.get());
+}
+
+void SymbolTableGenerator::visitArrayAssignment(ArrayAssignmentNode* node) {
     if (!table.lookup(node->identifier)) {
         error("'" + node->identifier + "' is undefined", node->line, node->column);
         return;
@@ -241,6 +288,12 @@ void SymbolTableGenerator::visitExpression(ASTNode* node) {
 
     else if (auto p = dynamic_cast<UnaryOperationNode*>(node)) {
         visitExpression(p->operand.get());
+    }
+
+    else if (auto* p = dynamic_cast<ArrayLiteralNode*>(node)) {
+        for (auto& it : p->value) {
+            visitExpression(it.get());
+        }
     }
 }
 

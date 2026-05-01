@@ -22,7 +22,10 @@ private:
     std::vector<std::unique_ptr<ASTNode>> parseBlock();
     std::unique_ptr<ASTNode> parseStatement();
     std::unique_ptr<VariableDeclarationNode> parseVariableDeclaration();
+    std::unique_ptr<ArrayDeclarationNode> parseArrayDeclaration();
     std::unique_ptr<VariableAssignmentNode> parseVariableAssignment();
+    std::unique_ptr<ArrayAssignmentNode> parseArrayAssignment();
+    std::unique_ptr<ArrayAccessNode> parseArrayAccess();
     std::unique_ptr<ReturnNode> parseReturnStatement();
     std::unique_ptr<ASTNode> parseExpressionStatement();
     std::unique_ptr<IfStatementNode> parseIfStatement();
@@ -40,6 +43,7 @@ private:
     std::unique_ptr<ASTNode> parseFactor();
     std::unique_ptr<ASTNode> parseUnary();
     std::unique_ptr<ASTNode> parsePrimary();
+    std::unique_ptr<ArrayLiteralNode> parseArrayLiteral();
     std::unique_ptr<FunctionCallNode> parseFunctionCall();
     std::vector<std::unique_ptr<ASTNode>> parseArgumentList();
   

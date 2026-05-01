@@ -38,7 +38,9 @@ private:
     void generateFunction(FunctionDeclarationNode* node);
     void generateStatement(ASTNode* node);
     void generateVariableDeclaration(VariableDeclarationNode* node);
+    void generateArrayDeclaration(ArrayDeclarationNode* node);
     void generateVariableAssignment(VariableAssignmentNode* node);
+    void generateArrayAssignment(ArrayAssignmentNode* node);
     void generateReturn(ReturnNode* node);
     void generateIf(IfStatementNode* node);
     void generateWhile(WhileStatementNode* node);
@@ -47,4 +49,5 @@ private:
     void generateBinaryOp(BinaryOperationNode* node);
     void generateUnaryOp(UnaryOperationNode* node);
     void generateFunctionCall(FunctionCallNode* node);
+    void generateArrayAccess(ArrayAccessNode* node);
 };

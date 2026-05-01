@@ -24,47 +24,12 @@ std::string toString(Type type) {
     }
 }
 
-std::string tokenTypeToString(TokenType type) {
+inline std::string tokenTypeToString(TokenType type) {
     switch (type) {
-        case TokenType::INT:            return "INT";
-        case TokenType::STRING:         return "STRING";
-        case TokenType::BOOL:           return "BOOL";
-        case TokenType::FUNCTION:       return "FUNCTION";
-        case TokenType::IF:             return "IF";
-        case TokenType::ELSE:           return "ELSE";
-        case TokenType::ELSE_IF:        return "ELSE_IF";
-        case TokenType::WHILE:          return "WHILE";
-        case TokenType::FOR:            return "FOR";
-        case TokenType::RETURN:         return "RETURN";
-        case TokenType::NUMBER:         return "NUMBER";
-        case TokenType::TRUE:           return "TRUE";
-        case TokenType::FALSE:          return "FALSE";
-        case TokenType::IDENTIFIER:     return "IDENTIFIER";
-        case TokenType::PLUS:           return "PLUS";
-        case TokenType::MINUS:          return "MINUS";
-        case TokenType::MULTIPLY:       return "MULTIPLY";
-        case TokenType::DIVIDE:         return "DIVIDE";
-        case TokenType::MOD:            return "MOD";
-        case TokenType::EQUAL:          return "EQUAL";
-        case TokenType::NOT_EQUAL:      return "NOT_EQUAL";
-        case TokenType::LESS:           return "LESS";
-        case TokenType::LESS_EQUAL:     return "LESS_EQUAL";
-        case TokenType::GREATER:        return "GREATER";
-        case TokenType::GREATER_EQUAL:  return "GREATER_EQUAL";
-        case TokenType::OR:             return "OR";
-        case TokenType::AND:            return "AND";
-        case TokenType::NOT:            return "NOT";
-        case TokenType::ASSIGN:         return "ASSIGN";
-        case TokenType::ARROW:          return "ARROW";
-        case TokenType::SEMICOLON:      return "SEMICOLON";
-        case TokenType::COMMA:          return "COMMA";
-        case TokenType::LEFT_BRACKET:   return "LEFT_BRACKET";
-        case TokenType::RIGHT_BRACKET:  return "RIGHT_BRACKET";
-        case TokenType::LEFT_BRACE:     return "LEFT_BRACE";
-        case TokenType::RIGHT_BRACE:    return "RIGHT_BRACE";
-        case TokenType::END_OF_FILE:    return "EOF";
-        case TokenType::INVALID:        return "INVALID";
-        default:                        return "UNKNOWN";
+#define X(name) case TokenType::name: return #name;
+        TOKEN_TYPES
+#undef X
+    default: return "UNKNOWN";
     }
 }
 
@@ -116,9 +81,23 @@ void printAST(ASTNode* node, int indent) {
                   << " " << var->identifier << "\n";
         if (var->value) printAST(var->value.get(), indent + 1);
     }
+    else if (auto* arr = dynamic_cast<ArrayDeclarationNode*>(node)) {
+        std::cout << pad << "Declare Array: "
+                  << toString(arr->element_type)
+                  << " " << arr->identifier << "\n";
+        
+        if (arr->elements) {
+            std::cout << pad << "  Values:\n";
+            printAST(arr->elements.get(), indent + 2);
+        }
+    }
     else if (auto* assign = dynamic_cast<VariableAssignmentNode*>(node)) {
         std::cout << pad << "Assign: " << assign->identifier << "\n";
         printAST(assign->value.get(), indent + 1);
+    }
+    else if (auto* arr_assign = dynamic_cast<ArrayAssignmentNode*>(node)) {
+        std::cout << pad << "Assign Array: " << arr_assign->identifier << "\n";
+        printAST(arr_assign->value.get(), indent + 1);
     }
     else if (auto* ret = dynamic_cast<ReturnNode*>(node)) {
         std::cout << pad << "Return\n";
@@ -180,8 +159,39 @@ void printAST(ASTNode* node, int indent) {
     else if (auto* num = dynamic_cast<NumberLiteralNode*>(node)) {
         std::cout << pad << "Number: " << num->value << "\n";
     }
+    else if (auto* str = dynamic_cast<StringLiteralNode*>(node)) {
+        std::cout << pad << "String: \"" << str->value << "\"\n";
+    }
     else if (auto* b = dynamic_cast<BooleanLiteralNode*>(node)) {
         std::cout << pad << "Boolean: " << b->value << "\n";
+    }
+    else if (auto* a = dynamic_cast<ArrayLiteralNode*>(node)) {
+        std::cout << pad << "Array: [";
+        
+        for (size_t i = 0; i < a->value.size(); ++i) {
+            if (auto* num = dynamic_cast<NumberLiteralNode*>(a->value[i].get())) {
+                std::cout << num->value;
+            }
+            else if (auto* b = dynamic_cast<BooleanLiteralNode*>(a->value[i].get())) {
+                std::cout << b->value;
+            }
+            else if (auto* id = dynamic_cast<IdentifierNode*>(a->value[i].get())) {
+                std::cout << id->value;
+            }
+            else {
+                std::cout << "?"; // fallback
+            }
+            
+            if (i != a->value.size() - 1)
+                std::cout << ", ";
+        }
+        
+        std::cout << "]\n";
+    }
+    else if (auto* access = dynamic_cast<ArrayAccessNode*>(node)) {
+        std::cout << pad << "ArrayAccess: " << access->identifier << "[\n";
+        printAST(access->index.get(), indent + 1);
+        std::cout << pad << "]\n";
     }
     else {
         std::cout << pad << "Unknown node\n";
@@ -356,6 +366,5 @@ int main(int argc, char* argv[]) {
     }
 
     std::cout << "blc: compiled successfully\n";
-    std::cout << "[DEBUG] reaching return 0\n";
     return 0;
 }
