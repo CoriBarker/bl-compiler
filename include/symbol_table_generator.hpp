@@ -22,7 +22,9 @@ private:
     void visitFunctionDeclaration(FunctionDeclarationNode* node);
     void visitStatement(ASTNode* node);
     void visitVariableDeclaration(VariableDeclarationNode* node);
+    void visitArrayDeclaration(ArrayDeclarationNode* node);
     void visitVariableAssignment(VariableAssignmentNode* node);
+    void visitArrayAssignment(ArrayAssignmentNode* node);
     void visitIfStatement(IfStatementNode* node);
     void visitWhileStatement(WhileStatementNode* node);
     void visitForStatement(ForStatementNode* node);

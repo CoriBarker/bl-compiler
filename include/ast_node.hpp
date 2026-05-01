@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <cstdint>
 
 class ASTNode {
 public:
@@ -100,9 +101,9 @@ public:
 
 class NumberLiteralNode : public ASTNode {
 public:
-    long long value;
+    int64_t value;
 
-    NumberLiteralNode(long long value) : value(value) {}
+    NumberLiteralNode(int64_t value) : value(value) {}
 };
 
 class BooleanLiteralNode : public ASTNode {
@@ -116,7 +117,7 @@ class ArrayLiteralNode : public ASTNode {
 public:
     std::vector<std::unique_ptr<ASTNode>> value;
 
-  ArrayLiteralNode(std::vector<std::unique_ptr<ASTNode>> value) : value(std::move(value)) {}
+    ArrayLiteralNode(std::vector<std::unique_ptr<ASTNode>> value) : value(std::move(value)) {}
 };
 
 class ArrayDeclarationNode : public ASTNode {

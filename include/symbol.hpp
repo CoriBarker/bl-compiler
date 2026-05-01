@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <string>
+#include <cstdint>
 
 struct Symbol {
     std::string name;
@@ -12,6 +13,7 @@ struct Symbol {
     SymbolKind kind;
     Type type;
     std::vector<Type> parameter_types;
+    uint64_t array_size;
     int line;
     int column;
 };
