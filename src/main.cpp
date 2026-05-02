@@ -235,43 +235,127 @@ void printSymbolTable(const SymbolTable& table) {
     }
 }
 
-// ---------------- MAIN ----------------
-int main(int argc, char* argv[]) {
-    std::string filename;
-    bool verbose = false;
+// ---------------- OPTIONS ----------------
+struct CompilerOptions {
+    std::string input_file;
+    std::string output_file;
 
-    // Parse arguments
+    bool verbose = false;
+    bool print_tokens = false;
+    bool print_ast = false;
+    bool print_symbols = false;
+
+    bool stop_after_semantics = false;
+    bool emit_asm = false;
+    bool emit_obj = false;
+};
+
+// ---------------- HELP ----------------
+void printHelp() {
+    std::cout << R"(blc - Beginner Language Compiler
+
+Usage:
+  blc [options] <input>
+
+Options:
+  -h, --help            Show this help message
+  -v, --verbose         Enable verbose output
+
+  --tokens              Print tokens
+  --ast                 Print AST
+  --symbols             Print symbol table
+
+  --no-codegen          Stop after semantic analysis
+  --emit-asm            Keep generated assembly (.s)
+  --emit-obj            Stop after object file generation
+
+  -o <file>             Output executable name
+
+Examples:
+  blc main.bl
+  blc main.bl -v
+  blc main.bl --ast --symbols
+)";
+}
+
+// ---------------- ARG PARSER ----------------
+bool parseArgs(int argc, char* argv[], CompilerOptions& opts) {
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
-        if (arg == "--verbose" || arg == "-v") {
-            verbose = true;
-        } else {
-            filename = arg;
+
+        if (arg == "-h" || arg == "--help") {
+            printHelp();
+            return false;
+        }
+        else if (arg == "-v" || arg == "--verbose") {
+            opts.verbose = true;
+        }
+        else if (arg == "--tokens") {
+            opts.print_tokens = true;
+        }
+        else if (arg == "--ast") {
+            opts.print_ast = true;
+        }
+        else if (arg == "--symbols") {
+            opts.print_symbols = true;
+        }
+        else if (arg == "--no-codegen") {
+            opts.stop_after_semantics = true;
+        }
+        else if (arg == "--emit-asm") {
+            opts.emit_asm = true;
+        }
+        else if (arg == "--emit-obj") {
+            opts.emit_obj = true;
+        }
+        else if (arg == "-o") {
+            if (i + 1 >= argc) {
+                std::cerr << "blc: missing argument for -o\n";
+                return false;
+            }
+            opts.output_file = argv[++i];
+        }
+        else if (arg[0] == '-') {
+            std::cerr << "blc: unknown option '" << arg << "'\n";
+            return false;
+        }
+        else {
+            opts.input_file = arg;
         }
     }
 
-    if (filename.empty()) {
+    if (opts.input_file.empty()) {
         std::cerr << "blc: no input file\n";
-        std::cerr << "Usage: blc <file.bl> [--verbose]\n";
+        std::cerr << "Try 'blc --help'\n";
+        return false;
+    }
+
+    return true;
+}
+
+// ---------------- MAIN ----------------
+int main(int argc, char* argv[]) {
+    CompilerOptions opts;
+
+    if (!parseArgs(argc, argv, opts)) {
         return 1;
     }
 
-    std::ifstream file(filename);
+    std::ifstream file(opts.input_file);
     if (!file) {
-        std::cerr << "blc: cannot open file '" << filename << "'\n";
+        std::cerr << "blc: cannot open file '" << opts.input_file << "'\n";
         return 1;
     }
 
     std::ostringstream buffer;
-    std::string line;
-    while (std::getline(file, line)) {
-        buffer << line << '\n';
-    }
+    buffer << file.rdbuf();
     std::string source = buffer.str();
 
-    std::cout << "blc: compiling '" << filename << "'\n";
+    std::cout << "blc: compiling '" << opts.input_file << "'\n";
 
     // -------- LEXING --------
+    if (opts.verbose) std::cout << "[LEXER]\n";
+
     Lexer lexer(source);
     std::vector<Token> tokens;
 
@@ -282,87 +366,111 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    if (verbose) printTokens(tokens);
+    if (opts.verbose || opts.print_tokens)
+        printTokens(tokens);
 
     // -------- PARSING --------
+    if (opts.verbose) std::cout << "[PARSER]\n";
+
     Parser parser(tokens);
     std::unique_ptr<ProgramNode> ast;
 
     try {
         ast = parser.parseProgram();
     } catch (const std::exception& e) {
-        std::cerr << "\nblc: " << e.what() << "\n";
+        std::cerr << "blc: " << e.what() << "\n";
         return 1;
     }
 
-    if (verbose) {
+    if (opts.verbose || opts.print_ast) {
         std::cout << "\n--- AST ---\n";
         printAST(ast.get(), 1);
     }
 
     // -------- SYMBOL TABLE --------
+    if (opts.verbose) std::cout << "[SYMBOL TABLE]\n";
+
     SymbolTableGenerator generator;
     SymbolTable table = generator.generate(ast.get());
 
-    if (verbose) printSymbolTable(table);
+    if (opts.verbose || opts.print_symbols)
+        printSymbolTable(table);
 
     auto errors = generator.getErrors();
     if (!errors.empty()) {
-        std::cout << "\n";
-        for (const auto& err : errors) {
+        for (const auto& err : errors)
             std::cerr << err;
-        }
-        std::cerr << "\nblc: " << errors.size() << " error(s) found. compilation stopped.\n";
+        std::cerr << "\nblc: " << errors.size()
+                  << " error(s) found. compilation stopped.\n";
         return 1;
     }
 
-    // -------- TYPE CHECKING --------
+    // -------- TYPE CHECK --------
+    if (opts.verbose) std::cout << "[TYPE CHECK]\n";
+
     TypeChecker type_checker(table);
     type_checker.check(ast.get());
-    
+
     auto type_errors = type_checker.getErrors();
     if (!type_errors.empty()) {
-        std::cout << "\n";
-        for (const auto& err : type_errors) {
+        for (const auto& err : type_errors)
             std::cerr << err;
-        }
-        std::cerr << "\nblc: " << type_errors.size() << " type error(s) found. compilation stopped.\n";
+        std::cerr << "\nblc: " << type_errors.size()
+                  << " type error(s) found. compilation stopped.\n";
         return 1;
     }
-    
-    if (verbose) {
-        std::cout << "\n--- Type Check ---\n";
-        std::cout << "  No type errors found.\n";
+
+    if (opts.stop_after_semantics) {
+        std::cout << "blc: stopped after semantic analysis\n";
+        return 0;
     }
 
     // -------- CODE GEN --------
-    CodeGenerator code_gen(table);
-    std::filesystem::path p(filename);
-    std::string stem = p.stem().string();
+    if (opts.verbose) std::cout << "[CODEGEN]\n";
+
+    std::filesystem::path p(opts.input_file);
+    std::string stem = opts.output_file.empty()
+        ? p.stem().string()
+        : opts.output_file;
+
     std::string asm_file = stem + ".s";
+
+    CodeGenerator code_gen(table);
     code_gen.generate(ast.get(), asm_file);
 
-    if (verbose) {
-        std::cout << "\n--- Code Gen ---\n";
+    if (opts.verbose) {
         std::cout << "  Generated assembly: " << asm_file << "\n";
     }
 
-    if (verbose) {
-        std::cout << "  Assembling file: " << asm_file << "\n";
+    // -------- ASSEMBLE --------
+    std::string obj_file = stem + ".o";
+    std::string cmd = "as -o " + obj_file + " " + asm_file;
+
+    if (system(cmd.c_str()) != 0) {
+        std::cerr << "blc: assembler failed\n";
+        return 1;
     }
 
-    std::string cmd = "as -o " + stem + ".o " + asm_file;
-    int res = system(cmd.c_str());
-    if (res != 0) {
-        std::cerr << "assembler failed\n";
-        exit(1);
+    if (opts.emit_obj) {
+        std::cout << "blc: object file generated (" << obj_file << ")\n";
+        return 0;
     }
-    
-    cmd = "gcc " + stem + ".o -o " + stem + " -no-pie";
-    res = system(cmd.c_str());
-    if (res != 0) {
-        std::cerr << "linker failed\n";
-        exit(1);
+
+    // -------- LINK --------
+    cmd = "gcc " + obj_file + " -o " + stem + " -no-pie";
+
+    if (system(cmd.c_str()) != 0) {
+        std::cerr << "blc: linker failed\n";
+        return 1;
+    }
+
+    // -------- CLEANUP --------
+    if (!opts.emit_asm) {
+        std::filesystem::remove(asm_file);
+    }
+
+    if (!opts.emit_obj) {
+        std::filesystem::remove(obj_file);
     }
 
     std::cout << "blc: compiled successfully\n";
