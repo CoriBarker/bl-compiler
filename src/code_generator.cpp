@@ -57,7 +57,6 @@ void CodeGenerator::buildOffsetMap(const std::string& function_name) {
             current_offset -= 8;
         }
         offsets[symbol.name] = current_offset;
-        std::cerr << symbol.name << " -> " << current_offset << " (array_size=" << symbol.array_size << ")\n";
     }
 }
 
