@@ -7,6 +7,7 @@ blc_SOURCES = \
 	symbol_table.cpp \
 	symbol_table_generator.cpp \
 	type_checker.cpp \
+	semantic_analyser.cpp \
 	code_generator.cpp
 
 AM_CXXFLAGS = \
