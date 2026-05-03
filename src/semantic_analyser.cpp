@@ -159,24 +159,33 @@ void SemanticAnalyser::analyseIdentifier(IdentifierNode* node, Context& ctx) {
 bool SemanticAnalyser::allPathsReturn(std::vector<std::unique_ptr<ASTNode>>& nodes) {
     for (auto& it : nodes) {
         if (auto* p = dynamic_cast<ReturnNode*>(it.get())) {
-                return true;
+            return true;
         }
         else if (auto* p = dynamic_cast<IfStatementNode*>(it.get())) {
-            return p->else_statement && allPathsReturn(p->else_statement->body) && allPathsReturn(p->body);
+            if (p->else_statement && allPathsReturn(p->else_statement->body) && allPathsReturn(p->body)) {
+                return true;
+            }
+            else {
+                continue;
+            }
         }
         else if (auto* p = dynamic_cast<ElseStatementNode*>(it.get())) {
-            return allPathsReturn(p->body);
+            if (allPathsReturn(p->body)) {
+                return true;
+            }
+            continue;
         }
         else if (auto* p = dynamic_cast<WhileStatementNode*>(it.get())) {
-            return false;
+            continue;
         }
         else if (auto* p = dynamic_cast<ForStatementNode*>(it.get())) {
-            return false;
+            continue;
         }
         else {
-            return false;
+            continue;
         }
     }
+    return false;
 }
 
 void SemanticAnalyser::error(const std::string& message, int line, int column) {
