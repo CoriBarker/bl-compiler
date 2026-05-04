@@ -541,7 +541,7 @@ std::unique_ptr<ASTNode> Parser::parseFactor() {
 }
 
 std::unique_ptr<ASTNode> Parser::parseUnary() {
-    if (peek().type == TokenType::NOT || peek().type == TokenType::MINUS) {
+    if (peek().type == TokenType::NOT) {
         std::string op = peek().value;
         int line = peek().line;
         int column = peek().column;
@@ -552,6 +552,32 @@ std::unique_ptr<ASTNode> Parser::parseUnary() {
         left->line = line;
         left->column = column;
         return left;
+    }
+
+    if (peek().type == TokenType::MINUS) {
+        if (tokens[position+1].type == TokenType::NUMBER) {
+            advance();
+            std::string value = peek().value;
+            int line = peek().line;
+            int column = peek().column;
+            advance();
+            auto number = std::make_unique<NumberLiteralNode>(std::stoll(value) * -1);
+            number->line = line;
+            number->column = column;
+            return number;
+        }
+
+        else {
+            std::string op = peek().value;
+            int line = peek().line;
+            int column = peek().column;
+            advance();
+            auto right = parsePrimary();
+            auto left = std::make_unique<UnaryOperationNode>(op, std::move(right));
+            left->line = line;
+            left->column = column;
+            return left;
+        }
     }
 
     return parsePrimary();

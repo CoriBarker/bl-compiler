@@ -30,8 +30,14 @@ void SemanticAnalyser::analyseStatement(ASTNode* node, Context& ctx) {
     if (auto* p = dynamic_cast<VariableDeclarationNode*>(node)) {
         analyseVariableDeclaration(p, ctx);
     }
+    else if (auto* p = dynamic_cast<ArrayDeclarationNode*>(node)) {
+        analyseArrayDeclaration(p, ctx);
+    }
     else if (auto* p = dynamic_cast<VariableAssignmentNode*>(node)) {
         analyseVariableAssignment(p, ctx);
+    }
+    else if (auto* p = dynamic_cast<ArrayAssignmentNode*>(node)) {
+        analyseArrayAssignment(p, ctx);
     }
     else if (auto* p = dynamic_cast<ReturnNode*>(node)) {
         analyseReturn(p, ctx);
@@ -71,11 +77,12 @@ void SemanticAnalyser::analyseArrayAssignment(ArrayAssignmentNode* node, Context
     uint64_t array_size = array->array_size;
     
     if (auto* p = dynamic_cast<NumberLiteralNode*>(node->index.get())) {
-        if (p->value >= array_size) {
-            error("array index " + std::to_string(p->value) + " is out of bounds for array '" + node->identifier + "' of size " + std::to_string(array_size), node->line, node->column);
-        }
-        else if (p->value < 0) {
+        if (p->value < 0) {
             error("array index " + std::to_string(p->value) + " is negative for array '" + node->identifier + "'", node->line, node->column);
+        }
+
+        else if (p->value >= array_size) {
+            error("array index " + std::to_string(p->value) + " is out of bounds for array '" + node->identifier + "' of size " + std::to_string(array_size), node->line, node->column);
         }
     }
 
@@ -211,12 +218,12 @@ void SemanticAnalyser::analyseArrayAccess(ArrayAccessNode* node, Context& ctx) {
     if (auto* p = dynamic_cast<NumberLiteralNode*>(node->index.get())) {
         Symbol* array = table.lookupName(node->identifier);
         uint64_t array_size = array->array_size;
-        if (p->value >= array_size) {
-            error("array index " + std::to_string(p->value) + " is out of bounds for array '" + node->identifier + "' of size " + std::to_string(array_size), node->line, node->column);
+        if (p->value < 0) {
+            error("array index " + std::to_string(p->value) + " is negative for array '" + node->identifier + "'", node->line, node->column);
         }
 
-        else if (p->value < 0) {
-            error("array index " + std::to_string(p->value) + " is negative for array '" + node->identifier + "'", node->line, node->column);
+        else if (p->value >= array_size) {
+            error("array index " + std::to_string(p->value) + " is out of bounds for array '" + node->identifier + "' of size " + std::to_string(array_size), node->line, node->column);
         }
 
         else if (ctx.initialised_vars.find(node->identifier) == ctx.initialised_vars.end()) {
