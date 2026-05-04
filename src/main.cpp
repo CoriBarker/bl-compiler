@@ -403,10 +403,9 @@ int main(int argc, char* argv[]) {
     if (!errors.empty()) {
         for (const auto& err : errors) {
             std::cerr << err;
-            std::cerr << "\nblc: " << errors.size()
-                      << " error(s) found. compilation stopped.\n";
-            return 1;
         }
+        std::cerr << "\nblc: " << errors.size() << " error(s) found. compilation stopped.\n";
+        return 1;
     }
 
     // -------- TYPE CHECK --------
@@ -419,11 +418,11 @@ int main(int argc, char* argv[]) {
     if (!type_errors.empty()) {
         for (const auto& err : type_errors) {
             std::cerr << err;
-            std::cerr << "\nblc: " << type_errors.size()
-                      << " type error(s) found. compilation stopped.\n";
-            return 1;
         }
+        std::cerr << "\nblc: " << type_errors.size() << " type error(s) found. compilation stopped.\n";
+        return 1;
     }
+
 
     // -------- SEMANTIC ANALYSIS --------
     if (opts.verbose) std::cout << "[SEMANTIC ANALYSIS]\n";
@@ -435,10 +434,9 @@ int main(int argc, char* argv[]) {
     if (!semantic_errors.empty()) {
         for (const auto& err : semantic_errors) {
             std::cerr << err;
-            std::cerr << "\nblc: " << semantic_errors.size()
-                      << " semantic error(s) found. compilation stopped.\n";
-            return 1;
         }
+        std::cerr << "\nblc: " << semantic_errors.size() << " semantic error(s) found. compilation stopped.\n";
+        return 1;
     }
 
     if (opts.stop_after_semantics) {
