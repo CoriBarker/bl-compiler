@@ -1,0 +1,68 @@
+function divide(int a, int b) -> int {
+    return a / b;
+}
+
+function fib(int n) -> int {
+    if (n == 0) {
+        return 0;
+    }
+    if (n == 1) {
+        return 1;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
+function sumTo(int n) -> int {
+    int total = 0;
+    int i = 0;
+    while (i < n) {
+        total = total + i;
+        i = i + 1;
+    }
+    return total;
+}
+
+function branchReturn(int x) -> int {
+    if (x > 0) {
+        return 1;
+    } else {
+        return 0 - 1;
+    }
+}
+
+function main() -> int {
+    int a = 10;
+    int b = 20;
+    int c;
+    c = a + b;
+
+    int d = divide(a, b);
+    int e = fib(10);
+    int f = sumTo(5);
+    int g = branchReturn(a);
+
+    if (a > 5) {
+        int inner = a + 1;
+        c = inner + b;
+    } else {
+        int inner = b + 1;
+        c = inner + a;
+    }
+
+    int counter = 0;
+    while (counter < 10) {
+        counter = counter + 1;
+        if (counter == 5) {
+            c = c + counter;
+        }
+    }
+
+    for (int i = 0; i < 5; i = i + 1) {
+        c = c + i;
+        for (int j = 0; j < i; j = j + 1) {
+            c = c + j;
+        }
+    }
+
+    return c;
+}

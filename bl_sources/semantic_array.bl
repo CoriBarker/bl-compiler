@@ -1,0 +1,17 @@
+function main() -> int {
+    int arr[] = [1, 2, 3, 4, 5];
+    int small[] = [10, 20, 30];
+
+    int x = arr[10];
+
+    int y = small[-1];
+
+    int uninit[4];
+    int z = uninit[0];
+
+    arr[7] = 99;
+
+    small[-2] = 50;
+
+    return 0;
+}

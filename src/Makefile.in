@@ -103,7 +103,8 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_blc_OBJECTS = main.$(OBJEXT) lexer.$(OBJEXT) parser.$(OBJEXT) \
 	symbol_table.$(OBJEXT) symbol_table_generator.$(OBJEXT) \
-	type_checker.$(OBJEXT) code_generator.$(OBJEXT)
+	type_checker.$(OBJEXT) semantic_analyser.$(OBJEXT) \
+	code_generator.$(OBJEXT)
 blc_OBJECTS = $(am_blc_OBJECTS)
 blc_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -123,7 +124,7 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/code_generator.Po \
 	./$(DEPDIR)/lexer.Po ./$(DEPDIR)/main.Po ./$(DEPDIR)/parser.Po \
-	./$(DEPDIR)/symbol_table.Po \
+	./$(DEPDIR)/semantic_analyser.Po ./$(DEPDIR)/symbol_table.Po \
 	./$(DEPDIR)/symbol_table_generator.Po \
 	./$(DEPDIR)/type_checker.Po
 am__mv = mv -f
@@ -261,6 +262,7 @@ blc_SOURCES = \
 	symbol_table.cpp \
 	symbol_table_generator.cpp \
 	type_checker.cpp \
+	semantic_analyser.cpp \
 	code_generator.cpp
 
 AM_CXXFLAGS = -std=c++17 -I$(top_srcdir)/include -Wall -Wextra \
@@ -355,6 +357,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lexer.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/semantic_analyser.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/symbol_table.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/symbol_table_generator.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/type_checker.Po@am__quote@ # am--include-marker
@@ -511,6 +514,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/lexer.Po
 	-rm -f ./$(DEPDIR)/main.Po
 	-rm -f ./$(DEPDIR)/parser.Po
+	-rm -f ./$(DEPDIR)/semantic_analyser.Po
 	-rm -f ./$(DEPDIR)/symbol_table.Po
 	-rm -f ./$(DEPDIR)/symbol_table_generator.Po
 	-rm -f ./$(DEPDIR)/type_checker.Po
@@ -563,6 +567,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/lexer.Po
 	-rm -f ./$(DEPDIR)/main.Po
 	-rm -f ./$(DEPDIR)/parser.Po
+	-rm -f ./$(DEPDIR)/semantic_analyser.Po
 	-rm -f ./$(DEPDIR)/symbol_table.Po
 	-rm -f ./$(DEPDIR)/symbol_table_generator.Po
 	-rm -f ./$(DEPDIR)/type_checker.Po

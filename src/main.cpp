@@ -8,6 +8,7 @@
 #include "parser.hpp"
 #include "symbol_table_generator.hpp"
 #include "type_checker.hpp"
+#include "semantic_analyser.hpp"
 #include "code_generator.hpp"
 
 // ---------------- HELPERS ----------------
@@ -366,8 +367,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    if (opts.verbose || opts.print_tokens)
+    if (opts.verbose || opts.print_tokens) {
         printTokens(tokens);
+    }
 
     // -------- PARSING --------
     if (opts.verbose) std::cout << "[PARSER]\n";
@@ -393,15 +395,16 @@ int main(int argc, char* argv[]) {
     SymbolTableGenerator generator;
     SymbolTable table = generator.generate(ast.get());
 
-    if (opts.verbose || opts.print_symbols)
+    if (opts.verbose || opts.print_symbols) {
         printSymbolTable(table);
+    }
 
     auto errors = generator.getErrors();
     if (!errors.empty()) {
-        for (const auto& err : errors)
+        for (const auto& err : errors) {
             std::cerr << err;
-        std::cerr << "\nblc: " << errors.size()
-                  << " error(s) found. compilation stopped.\n";
+        }
+        std::cerr << "\nblc: " << errors.size() << " error(s) found. compilation stopped.\n";
         return 1;
     }
 
@@ -413,10 +416,26 @@ int main(int argc, char* argv[]) {
 
     auto type_errors = type_checker.getErrors();
     if (!type_errors.empty()) {
-        for (const auto& err : type_errors)
+        for (const auto& err : type_errors) {
             std::cerr << err;
-        std::cerr << "\nblc: " << type_errors.size()
-                  << " type error(s) found. compilation stopped.\n";
+        }
+        std::cerr << "\nblc: " << type_errors.size() << " type error(s) found. compilation stopped.\n";
+        return 1;
+    }
+
+
+    // -------- SEMANTIC ANALYSIS --------
+    if (opts.verbose) std::cout << "[SEMANTIC ANALYSIS]\n";
+
+    SemanticAnalyser semantic_analyser(table);
+    semantic_analyser.analyse(ast.get());
+
+    auto semantic_errors = semantic_analyser.getErrors();
+    if (!semantic_errors.empty()) {
+        for (const auto& err : semantic_errors) {
+            std::cerr << err;
+        }
+        std::cerr << "\nblc: " << semantic_errors.size() << " semantic error(s) found. compilation stopped.\n";
         return 1;
     }
 
@@ -424,6 +443,7 @@ int main(int argc, char* argv[]) {
         std::cout << "blc: stopped after semantic analysis\n";
         return 0;
     }
+
 
     // -------- CODE GEN --------
     if (opts.verbose) std::cout << "[CODEGEN]\n";

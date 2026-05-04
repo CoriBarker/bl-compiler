@@ -22,6 +22,7 @@ public:
     Symbol* lookup(const std::string& name);
     Symbol* lookupCurrent(const std::string& name);
     Symbol* lookupQualified(const std::string& qualified_name);
+    Symbol* lookupName(const std::string& name);
     
     std::unordered_map<std::string, Symbol> symbols;
     std::vector<std::unique_ptr<Scope>> scopes;

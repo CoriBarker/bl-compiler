@@ -56,3 +56,12 @@ Symbol* SymbolTable::lookupQualified(const std::string& qualified_name) {
     
     return &it->second;
 }
+
+Symbol* SymbolTable::lookupName(const std::string& name) {
+    for (auto& [qualified_name, symbol] : symbols) {
+        if (symbol.name == name) {
+            return &symbol;
+        }
+    }
+    return nullptr;
+}
