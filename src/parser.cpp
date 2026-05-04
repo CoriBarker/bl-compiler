@@ -437,10 +437,14 @@ std::unique_ptr<ASTNode> Parser::parseLogicalOr() {
 
     while (peek().type == TokenType::OR) {
         std::string op = peek().value;
+        int line = peek().line;
+        int column = peek().column;
         advance();
 
         auto right = parseLogicalAnd();
         left = std::make_unique<BinaryOperationNode>(std::move(left), op, std::move(right));
+        left->line = line;
+        left->column = column;
     }
 
     return left;
@@ -451,10 +455,14 @@ std::unique_ptr<ASTNode> Parser::parseLogicalAnd() {
 
     while (peek().type == TokenType::AND) {
         std::string op = peek().value;
+        int line = peek().line;
+        int column = peek().column;
         advance();
 
         auto right = parseEquality();
         left = std::make_unique<BinaryOperationNode>(std::move(left), op, std::move(right));
+        left->line = line;
+        left->column = column;
     }
 
     return left;
@@ -465,10 +473,14 @@ std::unique_ptr<ASTNode> Parser::parseEquality() {
 
     while (peek().type == TokenType::EQUAL || peek().type == TokenType::NOT_EQUAL) {
         std::string op = peek().value;
+        int line = peek().line;
+        int column = peek().column;
         advance();
 
         auto right = parseComparison();
         left = std::make_unique<BinaryOperationNode>(std::move(left), op, std::move(right));
+        left->line = line;
+        left->column = column;
     }
 
     return left;
@@ -479,10 +491,14 @@ std::unique_ptr<ASTNode> Parser::parseComparison() {
 
     while (peek().type == TokenType::LESS || peek().type == TokenType::GREATER || peek().type == TokenType::LESS_EQUAL || peek().type == TokenType::GREATER_EQUAL) {
         std::string op = peek().value;
+        int line = peek().line;
+        int column = peek().column;
         advance();
 
         auto right = parseTerm();
         left = std::make_unique<BinaryOperationNode>(std::move(left), op, std::move(right));
+        left->line = line;
+        left->column = column;
     }
 
     return left;
@@ -493,10 +509,14 @@ std::unique_ptr<ASTNode> Parser::parseTerm() {
 
     while (peek().type == TokenType::PLUS || peek().type == TokenType::MINUS) {
         std::string op = peek().value;
+        int line = peek().line;
+        int column = peek().column;
         advance();
 
         auto right = parseFactor();
         left = std::make_unique<BinaryOperationNode>(std::move(left), op, std::move(right));
+        left->line = line;
+        left->column = column;
     }
 
     return left;
@@ -507,10 +527,14 @@ std::unique_ptr<ASTNode> Parser::parseFactor() {
 
     while (peek().type == TokenType::MULTIPLY || peek().type == TokenType::DIVIDE || peek().type == TokenType::MOD) {
         std::string op = peek().value;
+        int line = peek().line;
+        int column = peek().column;
         advance();
 
         auto right = parseUnary();
         left = std::make_unique<BinaryOperationNode>(std::move(left), op, std::move(right));
+        left->line = line;
+        left->column = column;
     }
 
     return left;
@@ -519,10 +543,15 @@ std::unique_ptr<ASTNode> Parser::parseFactor() {
 std::unique_ptr<ASTNode> Parser::parseUnary() {
     if (peek().type == TokenType::NOT || peek().type == TokenType::MINUS) {
         std::string op = peek().value;
+        int line = peek().line;
+        int column = peek().column;
         advance();
 
         auto right = parsePrimary();
-        return std::make_unique<UnaryOperationNode>(op, std::move(right));
+        auto left = std::make_unique<UnaryOperationNode>(op, std::move(right));
+        left->line = line;
+        left->column = column;
+        return left;
     }
 
     return parsePrimary();
