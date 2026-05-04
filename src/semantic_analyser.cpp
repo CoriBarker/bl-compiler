@@ -67,7 +67,7 @@ void SemanticAnalyser::analyseVariableAssignment(VariableAssignmentNode* node, C
 }
 
 void SemanticAnalyser::analyseArrayAssignment(ArrayAssignmentNode* node, Context& ctx) {
-    Symbol* array = table.lookup(node->identifier);
+    Symbol* array = table.lookupName(node->identifier);
     uint64_t array_size = array->array_size;
     
     if (auto* p = dynamic_cast<NumberLiteralNode*>(node->index.get())) {
@@ -209,7 +209,7 @@ void SemanticAnalyser::analyseUnaryOp(UnaryOperationNode* node, Context& ctx) {
 
 void SemanticAnalyser::analyseArrayAccess(ArrayAccessNode* node, Context& ctx) {
     if (auto* p = dynamic_cast<NumberLiteralNode*>(node->index.get())) {
-        Symbol* array = table.lookup(node->identifier);
+        Symbol* array = table.lookupName(node->identifier);
         uint64_t array_size = array->array_size;
         if (p->value >= array_size) {
             error("array index " + std::to_string(p->value) + " is out of bounds for array '" + node->identifier + "' of size " + std::to_string(array_size), node->line, node->column);
