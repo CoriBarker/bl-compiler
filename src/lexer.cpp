@@ -111,8 +111,10 @@ std::vector<Token> Lexer::tokenise() {
             advance();
 
         } else if (src[position] == '/') {
-            tokens.push_back(Token(TokenType::DIVIDE, std::string(1, src[position]), line, column));
-            advance();
+            if (position+1 < src.size() && src[position+1] != '/') {
+                tokens.push_back(Token(TokenType::DIVIDE, std::string(1, src[position]), line, column));
+                advance();
+            }
 
         } else if (src[position] == '=') {
           if (position+1 < src.size() && src[position + 1] == '=') {
