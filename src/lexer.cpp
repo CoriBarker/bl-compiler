@@ -27,6 +27,60 @@ std::vector<Token> Lexer::tokenise() {
                     advance();
                 }
 
+            } else if (src.substr(position, 4) == "int8" && !std::isalnum(src[position+4]) && src[position+4] != '_') {
+                tokens.push_back(Token(TokenType::INT8, "int8", line, column));
+                for (int i=0; i<4; i++) {
+                    advance();
+                }
+
+            } else if (src.substr(position, 5) == "int16" && !std::isalnum(src[position+5]) && src[position+5] != '_') {
+                tokens.push_back(Token(TokenType::INT16, "int16", line, column));
+                for (int i=0; i<5; i++) {
+                    advance();
+                }
+
+            } else if (src.substr(position, 5) == "int32" && !std::isalnum(src[position+5]) && src[position+5] != '_') {
+                tokens.push_back(Token(TokenType::INT32, "int32", line, column));
+                for (int i=0; i<5; i++) {
+                    advance();
+                }
+
+            } else if (src.substr(position, 5) == "int64" && !std::isalnum(src[position+5]) && src[position+5] != '_') {
+                tokens.push_back(Token(TokenType::INT64, "int64", line, column));
+                for (int i=0; i<5; i++) {
+                    advance();
+                }
+
+            } else if (src.substr(position, 4) == "uint" && !std::isalnum(src[position+4]) && src[position+4] != '_') {
+                tokens.push_back(Token(TokenType::UINT, "uint", line, column));
+                for (uint i=0; i<4; i++) {
+                    advance();
+                }
+
+            } else if (src.substr(position, 5) == "uint8" && !std::isalnum(src[position+5]) && src[position+5] != '_') {
+                tokens.push_back(Token(TokenType::UINT8, "uint8", line, column));
+                for (uint i=0; i<5; i++) {
+                    advance();
+                }
+
+            } else if (src.substr(position, 6) == "uint16" && !std::isalnum(src[position+6]) && src[position+6] != '_') {
+                tokens.push_back(Token(TokenType::UINT16, "uint16", line, column));
+                for (uint i=0; i<6; i++) {
+                    advance();
+                }
+
+            } else if (src.substr(position, 6) == "uint32" && !std::isalnum(src[position+6]) && src[position+6] != '_') {
+                tokens.push_back(Token(TokenType::UINT32, "uint32", line, column));
+                for (uint i=0; i<6; i++) {
+                    advance();
+                }
+
+            } else if (src.substr(position, 6) == "uint64" && !std::isalnum(src[position+6]) && src[position+6] != '_') {
+                tokens.push_back(Token(TokenType::UINT64, "uint64", line, column));
+                for (uint i=0; i<6; i++) {
+                    advance();
+                }
+
             } else if (src.substr(position, 6) == "string" && !std::isalnum(src[position+6]) && src[position+6] != '_') {
                 tokens.push_back(Token(TokenType::STRING, "string", line, column));
                 for (int i=0; i<6; i++) {

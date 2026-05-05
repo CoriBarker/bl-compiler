@@ -2,6 +2,15 @@
 
 #define TOKEN_TYPES \
     X(INT) \
+    X(INT8) \
+    X(INT16) \
+    X(INT32) \
+    X(INT64) \
+    X(UINT) \
+    X(UINT8) \
+    X(UINT16) \
+    X(UINT32) \
+    X(UINT64) \
     X(STRING) \
     X(BOOL) \
     X(FUNCTION) \
