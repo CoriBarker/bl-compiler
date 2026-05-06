@@ -333,6 +333,10 @@ void SymbolTableGenerator::visitExpression(ASTNode* node) {
             visitExpression(it.get());
         }
     }
+
+    else if (auto* p = dynamic_cast<CastNode*>(node)) {
+        visitExpression(p->expression.get());
+    }
 }
 
 void SymbolTableGenerator::visitFunctionCall(FunctionCallNode* node) {
