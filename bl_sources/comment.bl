@@ -1,0 +1,11 @@
+function main() -> int {
+    // Comment
+
+    int x = 5; // test comment
+    // 123
+    // 456
+
+    print(x);
+
+    return 0;
+}

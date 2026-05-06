@@ -1,0 +1,21 @@
+function main() -> int {
+    int a = 5;
+    uint b = 4;
+
+    int8 c = 1;
+    int16 d = 2;
+    int32 e = 3;
+    int64 f = 4;
+
+    uint8 g = 1;
+    uint16 h = 2;
+    uint32 i = 3;
+    uint64 j = 4;
+
+    for (int16 z = 0; ; z = z + 1) {
+        print(z);
+    }
+
+    return a;
+
+}
