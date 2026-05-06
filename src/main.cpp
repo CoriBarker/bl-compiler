@@ -473,7 +473,7 @@ int main(int argc, char* argv[]) {
     }
 
     // -------- LINK --------
-    cmd = "gcc " + obj_file + " -o " + stem + " -no-pie";
+    cmd = "ld -o " + stem + " " + obj_file;
 
     if (system(cmd.c_str()) != 0) {
         std::cerr << "blc: linker failed\n";

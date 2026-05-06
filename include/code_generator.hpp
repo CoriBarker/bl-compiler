@@ -56,6 +56,7 @@ private:
     void generateUnaryOp(UnaryOperationNode* node);
     void generateFunctionCall(FunctionCallNode* node);
     void generateArrayAccess(ArrayAccessNode* node);
+    void generateBuiltIns();
 
     std::string getSizeKeyword(Type t);
     std::string getRegister(Type t);

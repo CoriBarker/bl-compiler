@@ -41,5 +41,4 @@ private:
     int getBitWidth(Type t);
     bool isSigned(Type t);
     bool isAssignable(Type target, ASTNode* node);
-    bool fitsInType(int64_t value, Type target);
 };

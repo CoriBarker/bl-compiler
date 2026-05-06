@@ -80,7 +80,7 @@ void TypeChecker::checkVariableAssignment(VariableAssignmentNode* node) {
 void TypeChecker::checkReturn(ReturnNode* node) {
     Type return_type = inferType(node->expression.get());
 
-    if (return_type != current_function_return_type) {
+    if (!isAssignable(current_function_return_type, node->expression.get())) {
         error("function returns '" + typeToString(current_function_return_type) + "' but got '" + typeToString(return_type) + "'", node->line, node->column);
     }
 }
@@ -359,38 +359,16 @@ bool TypeChecker::isSigned(Type t) {
 
 bool TypeChecker::isAssignable(Type target, ASTNode* node) {
     Type source = inferType(node);
-
     if (target == source) return true;
-
-    if (source == Type::INTEGER_LITERAL) {
-        int64_t value = static_cast<NumberLiteralNode*>(node)->value;
-        return fitsInType(value, target);
-    }
-
+    
+    // literal fits into any int type
+    if (source == Type::INTEGER_LITERAL && isInt(target)) return true;
+    
+    // int widening
     if (isInt(target) && isInt(source)) {
         int targetBits = getBitWidth(target);
         int sourceBits = getBitWidth(source);
-
-        if (sourceBits <= targetBits) {
-            if (isSigned(target) == isSigned(source)) return true;
-
-            if (!isSigned(target) && isSigned(source)) return true;
-        }
-        return false;
-                                    
+        if (sourceBits <= targetBits) return true;
     }
     return false;
-}
-
-bool TypeChecker::fitsInType(int64_t value, Type target) {
-    switch (target) {
-    case Type::INT8:  return value >= -128 && value <= 127;
-    case Type::INT16: return value >= -32768 && value <= 32767;
-    case Type::INT32: return value >= -2147483648 && value <= 2147483647;
-    case Type::INT64: return value >= -9223372036854775808 && value <= 9223372036854775807;
-    case Type::UINT8: return value >= 0 && value <= 255;
-    case Type::UINT16: return value >= 0 && value <= 65535;
-    case Type::UINT32: return value >= 0 && value <= 4294967295;
-    case Type::UINT64: return value >= 0 && value <= 18446744073709551615;
-    }
 }

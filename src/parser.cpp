@@ -432,10 +432,12 @@ std::unique_ptr<ForInitNode> Parser::parseForInit() {
     for_init->column = peek().column;
 
     switch (peek().type) {
+    case TokenType::INT:
     case TokenType::INT8:
     case TokenType::INT16:
     case TokenType::INT32:
     case TokenType::INT64:
+    case TokenType::UINT:
     case TokenType::UINT8:
     case TokenType::UINT16:
     case TokenType::UINT32:

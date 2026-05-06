@@ -17,9 +17,18 @@ void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
     output << ".global _start\n";
     output << ".text\n\n";
 
+    generateBuiltIns();
+    output << "\n";
+
     for (auto& func : node->function_declarations) {
         generateFunction(func.get());
     }
+
+    emitLabel("_start");
+    emit("call main");
+    emit("mov rdi, rax");
+    emit("mov rax, 60");
+    emit("syscall");
 
     output << ".section .rodata\n";
     output << ".int_fmt: .string \"%lld\\n\"\n";
@@ -35,7 +44,6 @@ void CodeGenerator::emit(const std::string& line) {
 }
 
 void CodeGenerator::emitLabel(const std::string& label) {
-    
     output << label << ":\n";
 }
 
@@ -46,6 +54,10 @@ std::string CodeGenerator::newLabel(const std::string& prefix) {
 void CodeGenerator::buildOffsetMap(FunctionDeclarationNode* node) {
     offsets.clear();
     current_offset = 0;
+
+    for (auto& param : node->parameters) {
+        allocate(param->identifier, getSizeInBytes(param->type));
+    }
     
     for (auto& stmt : node->body) {
         walk(stmt.get());
@@ -72,13 +84,22 @@ void CodeGenerator::generateFunction(FunctionDeclarationNode* node) {
     int stack_size = ((-current_offset + 15) / 16) * 16;
     emit("sub rsp, " + std::to_string(stack_size));
 
-    static const std::vector<std::string> arg_regs = {
-        "rdi", "rsi", "rdx", "rcx", "r8", "r9"
-    };
-
+    static const std::vector<std::string> arg_regs_64 = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
+    static const std::vector<std::string> arg_regs_32 = { "edi", "esi", "edx", "ecx", "r8d", "r9d" };
+    static const std::vector<std::string> arg_regs_16 = { "di",  "si",  "dx",  "cx",  "r8w", "r9w" };
+    static const std::vector<std::string> arg_regs_8  = { "dil", "sil", "dl",  "cl",  "r8b", "r9b" };
+    
     for (size_t i = 0; i < node->parameters.size(); i++) {
-        std::string keyword = getSizeKeyword(node->parameters[1]->type);
-        emit("mov " + keyword + " PTR [rbp + " + std::to_string(getOffset(node->parameters[i]->identifier)) + "], " + arg_regs[i]);
+        Type t = node->parameters[i]->type;
+        std::string keyword = getSizeKeyword(t);
+        std::string reg;
+        switch (getSizeInBytes(t)) {
+        case 1: reg = arg_regs_8[i];  break;
+        case 2: reg = arg_regs_16[i]; break;
+        case 4: reg = arg_regs_32[i]; break;
+        default: reg = arg_regs_64[i]; break;
+        }
+        emit("mov " + keyword + " PTR [rbp + " + std::to_string(getOffset(node->parameters[i]->identifier)) + "], " + reg);
     }
 
     for (int i = 0; i < (int)node->body.size(); i++) {
@@ -142,8 +163,9 @@ void CodeGenerator::generateStatement(ASTNode* node) {
             if (p->expression) {
                 generateExpression(p->expression.get());
                 int offset = getOffset(p->identifier);
-                std::string keyword = getSizeKeyword(p->type);
-                emit("mov " + keyword + " PTR [rbp + " + std::to_string(offset) + "], " + getRegister(p->type)); 
+                Symbol* s = table.lookupName(p->identifier);
+                std::string keyword = getSizeKeyword(s->type);
+                emit("mov " + keyword + " PTR [rbp + " + std::to_string(offset) + "], " + getRegister(s->type)); 
             }
         }
     }
@@ -325,6 +347,10 @@ void CodeGenerator::generateExpression(ASTNode* node) {
         case Type::UINT64:
             emit("mov rax, QWORD PTR [rbp + " + std::to_string(offset) + "]");
             break;
+
+        case Type::STRING:
+            emit("mov rax, QWORD PTR [rbp + " + std::to_string(offset) + "]");
+            break;
         }
         
     }
@@ -447,18 +473,35 @@ void CodeGenerator::generateUnaryOp(UnaryOperationNode* node) {
 }
 
 void CodeGenerator::generateFunctionCall(FunctionCallNode* node) {
-    if (node->identifier == "print") {
-        generateExpression(node->arguments[0].get());
-        emit("lea rdi, [rip + .int_fmt]");
-        emit("mov rsi, rax");
-        emit("mov rax, 0");
-        emit("call printf");
-        return;
-    }
-
     static const std::vector<std::string> arg_regs = {
         "rdi", "rsi", "rdx", "rcx", "r8", "r9"
     };
+
+    if (node->identifier == "syscall") {
+        static const std::vector<std::string> syscall_regs = {
+            "rax", "rdi", "rsi", "rdx", "r10", "r8", "r9"
+        };
+        // push all args onto stack first
+        for (size_t i = 0; i < node->arguments.size(); i++) {
+            generateExpression(node->arguments[i].get());
+            emit("push rax");
+        }
+        // pop in reverse into correct registers
+        for (int i = node->arguments.size() - 1; i >= 0; i--) {
+            emit("pop " + syscall_regs[i]);
+        }
+        emit("syscall");
+        return;
+    }
+
+    if (node->identifier == "strlen") {
+        for (size_t i = 0; i < node->arguments.size(); i++) {
+            generateExpression(node->arguments[i].get());
+            emit("mov " + arg_regs[i] + ", rax");
+        }
+        emit("call strlen");
+        return;
+    }
 
     for (size_t i = 0; i < node->arguments.size(); i++) {
         generateExpression(node->arguments[i].get());
@@ -479,6 +522,21 @@ void CodeGenerator::generateArrayAccess(ArrayAccessNode* node) {
     emit("imul rax, rax, " + std::to_string(element_size));
     emit("lea rcx, [rbp + " + std::to_string(base) + "]");
     emit("mov rax, [rcx + rax]");
+}
+
+void CodeGenerator::generateBuiltIns() {
+    emitLabel("strlen");
+    std::string loop = newLabel("loop");
+    std::string done = newLabel("done");
+    emit("xor rax, rax");
+    emitLabel(loop);
+    emit("movzx rcx, BYTE PTR [rdi + rax]");
+    emit("test rcx, rcx");
+    emit("jz " + done);
+    emit("inc rax");
+    emit("jmp " + loop);
+    emitLabel(done);
+    emit("ret");
 }
 
 std::string CodeGenerator::getSizeKeyword(Type t) {

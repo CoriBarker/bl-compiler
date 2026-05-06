@@ -13,15 +13,25 @@ SymbolTable SymbolTableGenerator::generate(ProgramNode* program) {
 }
 
 void SymbolTableGenerator::visitProgram(ProgramNode* node) {
-    Symbol print_symbol;
-    print_symbol.name = "print";
-    print_symbol.qualified_name = "global::print";
-    print_symbol.kind = SymbolKind::FUNCTION;
-    print_symbol.type = Type::VOID;
-    print_symbol.parameter_types = { Type::INT32 };
-    print_symbol.line = 0;
-    print_symbol.column = 0;
-    table.define(print_symbol);
+    Symbol syscall_symbol;
+    syscall_symbol.name = "syscall";
+    syscall_symbol.qualified_name = "global::syscall";
+    syscall_symbol.kind = SymbolKind::FUNCTION;
+    syscall_symbol.type = Type::VOID;
+    syscall_symbol.parameter_types = { Type::INT64 };
+    syscall_symbol.line = 0;
+    syscall_symbol.column = 0;
+    table.define(syscall_symbol);
+
+    Symbol strlen_symbol;
+    strlen_symbol.name = "strlen";
+    strlen_symbol.qualified_name = "global::strlen";
+    strlen_symbol.kind = SymbolKind::FUNCTION;
+    strlen_symbol.type = Type::INT32;
+    strlen_symbol.parameter_types = { Type::STRING };
+    strlen_symbol.line = 0;
+    strlen_symbol.column = 0;
+    table.define(strlen_symbol);
 
     for (int i = 0; i < (int)node->function_declarations.size(); i++) {
         auto& function = node->function_declarations[i];
