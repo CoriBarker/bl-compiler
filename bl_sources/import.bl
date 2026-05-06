@@ -1,0 +1,6 @@
+import stdio;
+
+function main() -> int {
+    print("Hello, World!\n");
+    return 0;
+}

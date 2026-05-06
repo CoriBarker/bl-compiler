@@ -1,5 +1,4 @@
-function print() -> int {
-    string s = "Hello, World!";
+function print(string s) -> int {
     int len = strlen(s);
     syscall(1, 1, s, len);
     return 0;
