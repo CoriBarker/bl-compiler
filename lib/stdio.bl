@@ -1,0 +1,6 @@
+function print() -> int {
+    string s = "Hello, World!";
+    int len = strlen(s);
+    syscall(1, 1, s, len);
+    return 0;
+}
