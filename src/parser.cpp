@@ -726,6 +726,7 @@ std::unique_ptr<ASTNode> Parser::parsePrimary() {
             cast->line = peek().line;
             cast->column = peek().column;
             expect(TokenType::STRING, "as type to cast to");
+            cast->type = Type::STRING;
             expect(TokenType::RIGHT_BRACKET, "after type cast");
             cast->expression = parseExpression();
             return cast;
