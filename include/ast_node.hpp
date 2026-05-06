@@ -15,6 +15,14 @@ public:
     virtual ~ASTNode() = default;
 };
 
+class CastNode : public ASTNode {
+public:
+    Type type;
+    std::unique_ptr<ASTNode> expression;
+
+    CastNode() {}
+};
+
 class ParameterNode : public ASTNode {
 public:
     Type type;

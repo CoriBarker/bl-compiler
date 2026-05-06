@@ -73,6 +73,10 @@ void printAST(ASTNode* node, int indent) {
     else if (auto* imp = dynamic_cast<ImportNode*>(node)) {
         std::cout << pad << "Import: " << imp->value << "\n";
     }
+    else if (auto* cast = dynamic_cast<CastNode*>(node)) {
+        std::cout << pad << "Type Cast: (" << toString(cast->type) << ")\n";
+        printAST(cast->expression.get(), indent + 1);
+    } 
     else if (auto* call = dynamic_cast<FunctionCallNode*>(node)) {
         std::cout << pad << "Call: " << call->identifier << "()\n";
         for (const auto& arg : call->arguments)

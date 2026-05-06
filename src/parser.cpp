@@ -721,13 +721,24 @@ std::unique_ptr<ASTNode> Parser::parsePrimary() {
 
     case TokenType::LEFT_BRACKET: {
         advance();
-        auto expression = parseExpression();
-        expression->line = peek().line;
-        expression->column = peek().column;
-
-        expect(TokenType::RIGHT_BRACKET, "after expression");
-
-        return expression;
+        if (peek().type == TokenType::STRING) {
+            auto cast = std::make_unique<CastNode>();
+            cast->line = peek().line;
+            cast->column = peek().column;
+            expect(TokenType::STRING, "as type to cast to");
+            expect(TokenType::RIGHT_BRACKET, "after type cast");
+            cast->expression = parseExpression();
+            return cast;
+        }
+        else {
+            auto expression = parseExpression();
+            expression->line = peek().line;
+            expression->column = peek().column;
+            
+            expect(TokenType::RIGHT_BRACKET, "after expression");
+            
+            return expression;
+        }
     }
 
     default: {
