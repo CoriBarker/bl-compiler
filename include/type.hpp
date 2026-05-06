@@ -10,11 +10,8 @@
     X(UINT16) \
     X(UINT32) \
     X(UINT64) \
-    X(CHAR) \
     X(BOOL) \
     X(STRING) \
-    X(FLOAT) \
-    X(DOUBLE) \
     X(VOID)
 
 enum class Type {
