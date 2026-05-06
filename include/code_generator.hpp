@@ -22,6 +22,7 @@ class CodeGenerator {
 public:
     CodeGenerator(SymbolTable& table);
     void generate(ProgramNode* node, const std::string& filename);
+    void setLibraryMode(bool value);
     
 private:
     SymbolTable& table;
@@ -34,8 +35,6 @@ private:
     std::vector<RodataString> rodata_strings;
     int string_counter = 0;
     bool lib_mode = false;
-
-    void setLibraryMode(bool value);
 
     void emit(const std::string& line);
     void emitLabel(const std::string& label);
