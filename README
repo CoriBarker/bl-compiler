@@ -8,11 +8,12 @@ Requirements
 - make
 - gcc
 - as
-- (optional) autoconf, automake, m4
+- (recommended) autoconf, automake, m4
 
 
 Building
 --------
+    autoreconf -i
     mkdir build
     cd build
     ../configure
