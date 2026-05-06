@@ -55,8 +55,8 @@ void TypeChecker::checkVariableDeclaration(VariableDeclarationNode* node) {
         if (left == Type::VOID || right == Type::VOID) {
             return;
         }
-        
-        if (left != right) {
+
+        if (!isAssignable(left, node->value.get())) {
             error("cannot assign '" + typeToString(right) + "' to '" + typeToString(left) + "' variable '" + node->identifier + "'", node->line, node->column);
         }
     }
@@ -72,7 +72,7 @@ void TypeChecker::checkVariableAssignment(VariableAssignmentNode* node) {
         return;
     }
 
-    if (left != right) {
+    if (!isAssignable(left, node->value.get())) {
         error("cannot assign '" + typeToString(right) + "' to '" + typeToString(left) + "' variable '" + node->identifier + "'", node->line, node->column);
     }
 }
@@ -120,7 +120,7 @@ void TypeChecker::checkFor(ForStatementNode* node) {
             return;
         }
 
-        if (left != right) {
+        if (!isAssignable(left, node->init->expression.get())) {
             error("cannot assign '" + typeToString(right) + "' to '" + typeToString(left) + "' variable '" + node->init->identifier + "'", node->init->line, node->init->column);
         }
     }
@@ -144,7 +144,7 @@ Type TypeChecker::inferType(ASTNode* node) {
     if (!node) return Type::VOID;
 
     if (dynamic_cast<NumberLiteralNode*>(node)) {
-        return Type::INT;
+        return Type::INTEGER_LITERAL;
     }
 
     if (dynamic_cast<BooleanLiteralNode*>(node)) {
@@ -192,7 +192,7 @@ Type TypeChecker::inferBinaryOp(BinaryOperationNode* node) {
             return Type::VOID;
         }
         
-        if (left != right) {
+        if (!isAssignable(left, node->right.get())) {
             error("cannot apply '" + node->operation + "' to '" + typeToString(left) + "' and '" + typeToString(right) + "'", node->line, node->column);
             return Type::VOID;
         }
@@ -208,7 +208,7 @@ Type TypeChecker::inferBinaryOp(BinaryOperationNode* node) {
             return Type::VOID;
         }
 
-        if (left != right) {
+        if (!isAssignable(left, node->right.get())) {
             error("cannot compare '" + typeToString(left) + "' and '" + typeToString(right) + "' with '" + node->operation + "'", node->line, node->column);
             return Type::VOID;
         }
@@ -225,7 +225,7 @@ Type TypeChecker::inferBinaryOp(BinaryOperationNode* node) {
             error("cannot apply '" + node->operation + "' to '" + typeToString(left) + "' and '" + typeToString(right) + "'", node->line, node->column);
         }
 
-        if (left != right) {
+        if (!isAssignable(left, node->right.get())) {
             return Type::VOID;
         }
 
@@ -247,12 +247,12 @@ Type TypeChecker::inferBinaryOp(BinaryOperationNode* node) {
 
 Type TypeChecker::inferUnaryOp(UnaryOperationNode* node) {
     if (node->operation == "-") {
-        if (inferType(node->operand.get()) != Type::INT) {
+        if (!isInt(inferType(node->operand.get()))) {
             error("cannot apply '-' to '" + typeToString(inferType(node->operand.get())) + "', expected 'int'", node->line, node->column);
             return Type::VOID;
         }
 
-        return Type::INT;
+        return Type::INT32;
     }
 
     if (node->operation == "!") {
@@ -295,16 +295,11 @@ void TypeChecker::error(const std::string& message, int line, int column) {
 }
 
 std::string TypeChecker::typeToString(Type type) {
-    switch (type)
-    {
-        case Type::INT: return "INT";
-        case Type::CHAR: return "CHAR";
-        case Type::BOOL: return "BOOL";
-        case Type::STRING: return "STRING";
-        case Type::FLOAT: return "FLOAT";
-        case Type::DOUBLE: return "DOUBLE";
-        case Type::VOID: return "VOID";
-        default: return "unknown";
+    switch (type) {
+#define X(name) case Type::name: return #name;
+        TYPES
+#undef X
+    default: return "unknown";
     }
 }
 
@@ -330,4 +325,72 @@ Symbol* TypeChecker::lookupVariable(const std::string& name) {
     }
 
     return nullptr;
+}
+
+bool TypeChecker::isInt(Type t) {
+    switch (t) {
+    case Type::INT8:
+    case Type::INT16:
+    case Type::INT32:
+    case Type::INT64:
+    case Type::UINT8:
+    case Type::UINT16:
+    case Type::UINT32:
+    case Type::UINT64:
+        return true;
+    default:
+        return false;
+    }
+}
+
+int TypeChecker::getBitWidth(Type t) {
+    switch (t) {
+    case Type::INT8: case Type::UINT8: return 8;
+    case Type::INT16: case Type::UINT16: return 16;
+    case Type::INT32: case Type::UINT32: return 32;
+    case Type::INT64: case Type::UINT64: return 64;
+    default: return 0;
+    }
+}
+
+bool TypeChecker::isSigned(Type t) {
+    return t == Type::INT8 || t == Type::INT16 || t == Type::INT32 || t == Type::INT64;
+}
+
+bool TypeChecker::isAssignable(Type target, ASTNode* node) {
+    Type source = inferType(node);
+
+    if (target == source) return true;
+
+    if (source == Type::INTEGER_LITERAL) {
+        int64_t value = static_cast<NumberLiteralNode*>(node)->value;
+        return fitsInType(value, target);
+    }
+
+    if (isInt(target) && isInt(source)) {
+        int targetBits = getBitWidth(target);
+        int sourceBits = getBitWidth(source);
+
+        if (sourceBits <= targetBits) {
+            if (isSigned(target) == isSigned(source)) return true;
+
+            if (!isSigned(target) && isSigned(source)) return true;
+        }
+        return false;
+                                    
+    }
+    return false;
+}
+
+bool TypeChecker::fitsInType(int64_t value, Type target) {
+    switch (target) {
+    case Type::INT8:  return value >= -128 && value <= 127;
+    case Type::INT16: return value >= -32768 && value <= 32767;
+    case Type::INT32: return value >= -2147483648 && value <= 2147483647;
+    case Type::INT64: return value >= -9223372036854775808 && value <= 9223372036854775807;
+    case Type::UINT8: return value >= 0 && value <= 255;
+    case Type::UINT16: return value >= 0 && value <= 65535;
+    case Type::UINT32: return value >= 0 && value <= 4294967295;
+    case Type::UINT64: return value >= 0 && value <= 18446744073709551615;
+    }
 }

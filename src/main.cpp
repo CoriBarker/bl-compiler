@@ -14,18 +14,14 @@
 // ---------------- HELPERS ----------------
 std::string toString(Type type) {
     switch (type) {
-        case Type::INT:    return "int";
-        case Type::CHAR:   return "char";
-        case Type::BOOL:   return "bool";
-        case Type::STRING: return "string";
-        case Type::FLOAT:  return "float";
-        case Type::DOUBLE: return "double";
-        case Type::VOID:   return "void";
-        default:           return "unknown";
+#define X(name) case Type::name: return #name;
+        TYPES
+#undef X
+    default: return "unknown";
     }
 }
 
-inline std::string tokenTypeToString(TokenType type) {
+std::string tokenTypeToString(TokenType type) {
     switch (type) {
 #define X(name) case TokenType::name: return #name;
         TOKEN_TYPES

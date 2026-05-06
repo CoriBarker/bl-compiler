@@ -70,9 +70,54 @@ std::unique_ptr<ParameterNode> Parser::parseParameter() {
 }
 
 Type Parser::parseType() {
-    if (peek().type == TokenType::INT) {
+    if (peek().type == TokenType::INT8) {
         advance();
-        return Type::INT;
+        return Type::INT8;
+    }
+
+    if (peek().type == TokenType::INT16) {
+        advance();
+        return Type::INT16;
+    }
+
+    if (peek().type == TokenType::INT32 || peek().type == TokenType::INT) {
+        advance();
+        return Type::INT32;
+    }
+
+    if (peek().type == TokenType::INT64) {
+        advance();
+        return Type::INT64;
+    }
+
+    if (peek().type == TokenType::INT16) {
+        advance();
+        return Type::INT16;
+    }
+
+    if (peek().type == TokenType::INT32 || peek().type == TokenType::INT) {
+        advance();
+        return Type::INT32;
+    }
+
+    if (peek().type == TokenType::UINT8) {
+        advance();
+        return Type::UINT8;
+    }
+
+    if (peek().type == TokenType::UINT16) {
+        advance();
+        return Type::UINT16;
+    }
+
+    if (peek().type == TokenType::UINT32 || peek().type == TokenType::UINT) {
+        advance();
+        return Type::UINT32;
+    }
+
+    if (peek().type == TokenType::UINT64) {
+        advance();
+        return Type::UINT64;
     }
 
     if (peek().type == TokenType::STRING) {
@@ -86,7 +131,7 @@ Type Parser::parseType() {
     }
 
     error("Expected type 'int', 'string' or 'bool'");
-    return Type::INT;
+    return Type::INT32;
 }
 
 std::vector<std::unique_ptr<ASTNode>> Parser::parseBlock() {
@@ -108,6 +153,15 @@ std::unique_ptr<ASTNode> Parser::parseStatement() {
 
     switch (current.type) {
     case TokenType::INT:
+    case TokenType::INT8:
+    case TokenType::INT16:
+    case TokenType::INT32:
+    case TokenType::INT64:
+    case TokenType::UINT:
+    case TokenType::UINT8:
+    case TokenType::UINT16:
+    case TokenType::UINT32:
+    case TokenType::UINT64:
     case TokenType::BOOL:
     case TokenType::STRING:
         if (tokens[position+1].type == TokenType::IDENTIFIER && tokens[position+2].type == TokenType::LEFT_SQUARE) {
@@ -378,7 +432,14 @@ std::unique_ptr<ForInitNode> Parser::parseForInit() {
     for_init->column = peek().column;
 
     switch (peek().type) {
-    case TokenType::INT:
+    case TokenType::INT8:
+    case TokenType::INT16:
+    case TokenType::INT32:
+    case TokenType::INT64:
+    case TokenType::UINT8:
+    case TokenType::UINT16:
+    case TokenType::UINT32:
+    case TokenType::UINT64:
     case TokenType::STRING:
     case TokenType::BOOL:
         for_init->type = parseType();

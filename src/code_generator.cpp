@@ -43,20 +43,12 @@ std::string CodeGenerator::newLabel(const std::string& prefix) {
     return "." + prefix + "_" + std::to_string(label_counter++);
 }
 
-void CodeGenerator::buildOffsetMap(const std::string& function_name) {
+void CodeGenerator::buildOffsetMap(FunctionDeclarationNode* node) {
     offsets.clear();
     current_offset = 0;
-    for (auto& pair : table.symbols) {
-        const Symbol& symbol = pair.second;
-        if (symbol.kind == SymbolKind::FUNCTION) continue;
-        std::string prefix = function_name + "::";
-        if (symbol.qualified_name.substr(0, prefix.size()) != prefix) continue;
-        if (symbol.kind == SymbolKind::ARRAY) {
-            current_offset -= symbol.array_size * 8;
-        } else {
-            current_offset -= 8;
-        }
-        offsets[symbol.name] = current_offset;
+    
+    for (auto& stmt : node->body) {
+        walk(stmt.get());
     }
 }
 
@@ -72,7 +64,7 @@ void CodeGenerator::generateFunction(FunctionDeclarationNode* node) {
     return_label = newLabel("return");
     current_function = node->identifier;
 
-    buildOffsetMap(current_function);
+    buildOffsetMap(node);
     emitLabel(current_function);
 
     emit("push rbp");
@@ -85,7 +77,8 @@ void CodeGenerator::generateFunction(FunctionDeclarationNode* node) {
     };
 
     for (size_t i = 0; i < node->parameters.size(); i++) {
-        emit("mov QWORD PTR [rbp + " + std::to_string(getOffset(node->parameters[i]->identifier)) + "], " + arg_regs[i]);
+        std::string keyword = getSizeKeyword(node->parameters[1]->type);
+        emit("mov " + keyword + " PTR [rbp + " + std::to_string(getOffset(node->parameters[i]->identifier)) + "], " + arg_regs[i]);
     }
 
     for (int i = 0; i < (int)node->body.size(); i++) {
@@ -140,7 +133,8 @@ void CodeGenerator::generateStatement(ASTNode* node) {
             if (p->expression) {
                 generateExpression(p->expression.get());
                 int offset = getOffset(p->identifier);
-                emit("mov QWORD PTR [rbp + " + std::to_string(offset) + "], rax");
+                std::string keyword = getSizeKeyword(p->type);
+                emit("mov " + keyword + " PTR [rbp + " + std::to_string(offset) + "], " + getRegister(p->type));
             }
         }
 
@@ -148,7 +142,8 @@ void CodeGenerator::generateStatement(ASTNode* node) {
             if (p->expression) {
                 generateExpression(p->expression.get());
                 int offset = getOffset(p->identifier);
-                emit("mov QWORD PTR [rbp + " + std::to_string(offset) + "], rax"); 
+                std::string keyword = getSizeKeyword(p->type);
+                emit("mov " + keyword + " PTR [rbp + " + std::to_string(offset) + "], " + getRegister(p->type)); 
             }
         }
     }
@@ -158,7 +153,11 @@ void CodeGenerator::generateVariableDeclaration(VariableDeclarationNode* node) {
     if (node->value) {
         generateExpression(node->value.get());
         int offset = getOffset(node->identifier);
-        emit("mov QWORD PTR [rbp + " + std::to_string(offset) + "], rax");
+        Type t = node->type;
+        std::string size = getSizeKeyword(t);
+        std::string reg = getRegister(t);
+
+        emit("mov " + size + " PTR [rbp + " + std::to_string(offset) + "], " + reg);
     }
 }
 
@@ -168,13 +167,15 @@ void CodeGenerator::generateArrayDeclaration(ArrayDeclarationNode* node) {
         auto* literal = dynamic_cast<ArrayLiteralNode*>(node->elements.get());
         for (int i = 0; i < (int)literal->value.size(); i++) {
             generateExpression(literal->value[i].get());
-            emit("mov QWORD PTR [rbp + " + std::to_string(base + i * 8) + "], rax");
+            std::string keyword = getSizeKeyword(node->element_type);
+            emit("mov " + keyword + " PTR [rbp + " + std::to_string(base + i * 8) + "], " + getRegister(node->element_type));
         }
     }
     else {
         auto* size_literal = dynamic_cast<NumberLiteralNode*>(node->size_expr.get());
         for (int i = 0; i < size_literal->value; i++) {
-            emit("mov QWORD PTR [rbp + " + std::to_string(base + i * 8) + "], 0");
+            std::string keyword = getSizeKeyword(node->element_type);
+            emit("mov " + keyword + " PTR [rbp + " + std::to_string(base + i * 8) + "], 0");
         }
     }
 }
@@ -182,7 +183,9 @@ void CodeGenerator::generateArrayDeclaration(ArrayDeclarationNode* node) {
 void CodeGenerator::generateVariableAssignment(VariableAssignmentNode* node) {
     generateExpression(node->value.get());
     int offset = getOffset(node->identifier);
-    emit("mov QWORD PTR [rbp + " + std::to_string(offset) + "], rax");
+    Symbol* s = table.lookupName(node->identifier);
+    std::string keyword = getSizeKeyword(s->type);
+    emit("mov " + keyword + " PTR [rbp + " + std::to_string(offset) + "], " + getRegister(s->type));
 }
 
 void CodeGenerator::generateArrayAssignment(ArrayAssignmentNode* node) {
@@ -290,7 +293,40 @@ void CodeGenerator::generateExpression(ASTNode* node) {
 
     else if (auto* p = dynamic_cast<IdentifierNode*>(node)) {
         int offset = getOffset(p->value);
-        emit("mov rax, [rbp + " + std::to_string(offset) + "]");
+        Symbol* s = table.lookupName(p->value);
+        Type t = s->type;
+
+        switch (t) {
+        case Type::INT8:
+            emit("movsx rax, BYTE PTR [rbp + " + std::to_string(offset) + "]");
+            break;
+            
+        case Type::UINT8:
+            emit("movzx rax, BYTE PTR [rbp + " + std::to_string(offset) + "]");
+            break;
+            
+        case Type::INT16:
+            emit("movsx rax, WORD PTR [rbp + " + std::to_string(offset) + "]");
+            break;
+            
+        case Type::UINT16:
+            emit("movzx rax, WORD PTR [rbp + " + std::to_string(offset) + "]");
+            break;
+            
+        case Type::INT32:
+            emit("mov eax, DWORD PTR [rbp + " + std::to_string(offset) + "]");
+            break;
+            
+        case Type::UINT32:
+            emit("mov eax, DWORD PTR [rbp + " + std::to_string(offset) + "]");
+            break;
+            
+        case Type::INT64:
+        case Type::UINT64:
+            emit("mov rax, QWORD PTR [rbp + " + std::to_string(offset) + "]");
+            break;
+        }
+        
     }
 
     else if (auto* p = dynamic_cast<NumberLiteralNode*>(node)) {
@@ -436,9 +472,119 @@ void CodeGenerator::generateFunctionCall(FunctionCallNode* node) {
 
 void CodeGenerator::generateArrayAccess(ArrayAccessNode* node) {
     int base = getOffset(node->identifier);
+    Symbol* s = table.lookupName(node->identifier);
+    int element_size = getSizeInBytes(s->type);
 
     generateExpression(node->index.get());
-    emit("imul rax, rax, 8");
+    emit("imul rax, rax, " + std::to_string(element_size));
     emit("lea rcx, [rbp + " + std::to_string(base) + "]");
     emit("mov rax, [rcx + rax]");
+}
+
+std::string CodeGenerator::getSizeKeyword(Type t) {
+    switch (t) {
+    case Type::INT8:
+    case Type::UINT8:  return "BYTE";
+    case Type::INT16:
+    case Type::UINT16: return "WORD";
+    case Type::INT32:
+    case Type::UINT32: return "DWORD";
+    case Type::INT64:
+    case Type::UINT64: return "QWORD";
+    default: return "QWORD";
+    }
+}
+
+std::string CodeGenerator::getRegister(Type t) {
+    switch (t) {
+    case Type::INT8:
+    case Type::UINT8:  return "al";
+    case Type::INT16:
+    case Type::UINT16: return "ax";
+    case Type::INT32:
+    case Type::UINT32: return "eax";
+    case Type::INT64:
+    case Type::UINT64: return "rax";
+    default: return "rax";
+    }
+}
+
+int CodeGenerator::getSizeInBytes(Type t) {
+    switch(t) {
+    case Type::INT8: case Type::UINT8: return 1;
+    case Type::INT16: case Type::UINT16: return 2;
+    case Type::INT32: case Type::UINT32: return 4;
+    case Type::INT64: case Type::UINT64: return 8;
+    default: return 8;
+    }
+}
+
+
+void CodeGenerator::walk(ASTNode* n) {
+    if (auto* v = dynamic_cast<VariableDeclarationNode*>(n)) {
+        allocate(v->identifier, getSizeInBytes(v->type));
+    }
+    
+    else if (auto* a = dynamic_cast<ArrayDeclarationNode*>(n)) {
+        int size = 1;
+        if (auto* lit = dynamic_cast<NumberLiteralNode*>(a->size_expr.get())) {
+            size = lit->value;
+        }
+        allocate(a->identifier, size * getSizeInBytes(a->element_type));
+    }
+    
+    else if (auto* f = dynamic_cast<ForStatementNode*>(n)) {
+        if (f->init) {
+            walk(f->init.get());
+        }
+        for (auto& s : f->body) {
+            walk(s.get());
+        }
+    }
+    
+    else if (auto* i = dynamic_cast<ForInitNode*>(n)) {
+        if (!i->identifier.empty() && i->type != Type::VOID) {
+            allocate(i->identifier, getSizeInBytes(i->type));
+        }
+    }
+    
+    else if (auto* b = dynamic_cast<IfStatementNode*>(n)) {
+        for (auto& s : b->body) walk(s.get());
+        if (b->else_statement) {
+            for (auto& s : b->else_statement->body) walk(s.get());
+        }
+    }
+    
+    else if (auto* w = dynamic_cast<WhileStatementNode*>(n)) {
+        for (auto& s : w->body) walk(s.get());
+    }
+}
+
+
+void CodeGenerator::allocate(const std::string& name, int size) {
+    StackSlot s;
+    Symbol* sym = table.lookupName(name);
+    s.size = size;
+    s.type = sym->type;
+
+    int alignment = getAlignment(s.type);
+    current_offset = alignDown(current_offset, alignment);
+    current_offset -= size;
+    s.offset = current_offset;
+    offsets[name] = s.offset;
+}
+
+int CodeGenerator::alignDown(int offset, int alignment) {
+    int mod = -(offset) % alignment;
+    if (mod == 0) return offset;
+    return offset - (alignment - mod);
+}
+
+int CodeGenerator::getAlignment(Type t) {
+    int size = getSizeInBytes(t);
+
+    if (size >= 8) return 8;
+    if (size >= 4) return 4;
+    if (size >= 2) return 2;
+    return 1;
 }

@@ -37,4 +37,9 @@ private:
     void error(const std::string& message, int line, int column);
     std::string typeToString(Type type);
     Symbol* lookupVariable(const std::string& name);
+    bool isInt(Type t);
+    int getBitWidth(Type t);
+    bool isSigned(Type t);
+    bool isAssignable(Type target, ASTNode* node);
+    bool fitsInType(int64_t value, Type target);
 };

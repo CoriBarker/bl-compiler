@@ -18,7 +18,7 @@ void SymbolTableGenerator::visitProgram(ProgramNode* node) {
     print_symbol.qualified_name = "global::print";
     print_symbol.kind = SymbolKind::FUNCTION;
     print_symbol.type = Type::VOID;
-    print_symbol.parameter_types = { Type::INT };
+    print_symbol.parameter_types = { Type::INT32 };
     print_symbol.line = 0;
     print_symbol.column = 0;
     table.define(print_symbol);

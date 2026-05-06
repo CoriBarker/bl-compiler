@@ -12,6 +12,12 @@ struct RodataString {
     std::string value;
 };
 
+struct StackSlot {
+    int offset;
+    int size;
+    Type type;
+};
+
 class CodeGenerator {
 public:
     CodeGenerator(SymbolTable& table);
@@ -32,7 +38,7 @@ private:
     void emitLabel(const std::string& label);
     std::string newLabel(const std::string& prefix);
 
-    void buildOffsetMap(const std::string& function_name);
+    void buildOffsetMap(FunctionDeclarationNode* node);
     int getOffset(const std::string& name);
 
     void generateFunction(FunctionDeclarationNode* node);
@@ -50,4 +56,12 @@ private:
     void generateUnaryOp(UnaryOperationNode* node);
     void generateFunctionCall(FunctionCallNode* node);
     void generateArrayAccess(ArrayAccessNode* node);
+
+    std::string getSizeKeyword(Type t);
+    std::string getRegister(Type t);
+    int getSizeInBytes(Type t);
+    void walk(ASTNode* n);
+    void allocate(const std::string& name, int size);
+    int alignDown(int offset, int alignment);
+    int getAlignment(Type t);
 };
