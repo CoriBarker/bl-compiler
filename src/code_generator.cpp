@@ -10,12 +10,23 @@ void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
 
     output << ".intel_syntax noprefix\n";
 
+    bool has_main = false;
+    for (const auto& func : node->function_declarations) {
+        if (func->identifier == "main") {
+            has_main = true;
+            break;
+        }
+    }
+
     for (auto& func : node->function_declarations) {
         output << ".global " << func->identifier << "\n";
     }
 
     output << ".global _start\n";
     output << ".text\n\n";
+    if (!has_main) {
+        output << ".global main\n";
+    }
 
     generateBuiltIns();
     output << "\n";
@@ -24,11 +35,20 @@ void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
         generateFunction(func.get());
     }
 
-    emitLabel("_start");
-    emit("call main");
-    emit("mov rdi, rax");
-    emit("mov rax, 60");
-    emit("syscall");
+    if (!has_main && !lib_mode) {
+        emitLabel("main");
+        emit("mov rax, 0");        // return 0
+        emit("ret");
+        output << "\n";
+    }
+
+    if (!lib_mode) {
+        emitLabel("_start");
+        emit("call main");
+        emit("mov rdi, rax");
+        emit("mov rax, 60");
+        emit("syscall");
+    }
 
     output << ".section .rodata\n";
     output << ".int_fmt: .string \"%lld\\n\"\n";
@@ -37,6 +57,10 @@ void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
     }
 
     output.close();
+}
+
+void CodeGenerator::setLibraryMode(bool value) {
+    lib_mode = value;
 }
 
 void CodeGenerator::emit(const std::string& line) {

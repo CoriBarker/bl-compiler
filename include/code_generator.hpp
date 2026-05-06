@@ -33,6 +33,9 @@ private:
     std::string return_label;
     std::vector<RodataString> rodata_strings;
     int string_counter = 0;
+    bool lib_mode = false;
+
+    void setLibraryMode(bool value);
 
     void emit(const std::string& line);
     void emitLabel(const std::string& label);

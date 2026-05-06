@@ -7,7 +7,12 @@ Parser::Parser(const std::vector<Token>& tokens) : tokens(tokens), position(0) {
 std::unique_ptr<ProgramNode> Parser::parseProgram() {
     auto program = std::make_unique<ProgramNode>();
 
+
     while (peek().type != TokenType::END_OF_FILE) {
+        while (peek().type == TokenType::IMPORT) {
+            auto import_node = parseImport();
+            program->imports.push_back(std::move(import_node));
+        }
         auto func = parseFunctionDeclaration();
         program->function_declarations.push_back(std::move(func));
     }
@@ -786,6 +791,15 @@ std::vector<std::unique_ptr<ASTNode>> Parser::parseArgumentList() {
     return argument_list;
 }
 
+std::unique_ptr<ImportNode> Parser::parseImport() {
+    auto node = std::make_unique<ImportNode>();
+    expect(TokenType::IMPORT, "at start of import statement");
+    expect(TokenType::IDENTIFIER, "as name of module to import");
+    node->value = tokens[position-1].value;
+    expect(TokenType::SEMICOLON, "at end of import statement");
+    return node;
+}
+
 Token Parser::advance() {
     return tokens[position++];
 }
@@ -795,11 +809,11 @@ Token Parser::peek() {
 }
 
 void Parser::error(const std::string& message, int line, int column) {
-    std::cerr << "ERROR: " << message << "\n";
-    std::cerr << "       at line " << line << ", column " << column << "\n\n";
+    std::string err;
+    err += "ERROR: " + message + "\n";
+    err += "       at line " + std::to_string(line) + ", column " + std::to_string(column) + "\n\n";
 
-
-    throw std::runtime_error("Parsing failed: " + message);
+    errors.push_back(err);
 }
 
 void Parser::error(const std::string& message) {
@@ -807,6 +821,10 @@ void Parser::error(const std::string& message) {
     int column = peek().column;
 
     error(message, line, column);
+}
+
+std::vector<std::string> Parser::getErrors() {
+    return errors;
 }
 
 void Parser::expect(TokenType expected, const std::string& context) {
@@ -818,40 +836,15 @@ void Parser::expect(TokenType expected, const std::string& context) {
 }
 
 std::string Parser::tokenTypeToString(TokenType type) {
-    switch(type) {
-        case TokenType::INT: return "'int'";
-        case TokenType::STRING: return "'string'";
-        case TokenType::FUNCTION: return "'function'";
-        case TokenType::NUMBER: return "number literal";
-        case TokenType::IDENTIFIER: return "identifier (variable/function name)";
-        case TokenType::RETURN: return "'return'";
-        case TokenType::IF: return "'if'";
-        case TokenType::WHILE: return "'while'";
-        case TokenType::FOR: return "'for'";
-        case TokenType::PLUS: return "'+'";
-        case TokenType::MINUS: return "'-'";
-        case TokenType::MULTIPLY: return "'*'";
-        case TokenType::DIVIDE: return "'/'";
-        case TokenType::EQUAL: return "'=='";
-        case TokenType::LESS_EQUAL: return "'<='";
-        case TokenType::GREATER_EQUAL: return "'=>'";
-        case TokenType::LESS: return "'<'";
-        case TokenType::GREATER: return "'>'";
-        case TokenType::ASSIGN: return "'='";
-        case TokenType::ARROW: return "'->'";
-        case TokenType::SEMICOLON: return "';'";
-        case TokenType::LEFT_BRACKET: return "'('";
-        case TokenType::RIGHT_BRACKET: return "')'";
-        case TokenType::LEFT_BRACE: return "'{'";
-        case TokenType::RIGHT_BRACE: return "'}'";
-        case TokenType::END_OF_FILE: return "EOF (End Of File)";
-        case TokenType::INVALID: return "Invalid token";
-        default:
-            return "UNKNOWN TOKEN";
+    switch (type) {
+#define X(name) case TokenType::name: return #name;
+        TOKEN_TYPES
+#undef X
+    default: return "UNKNOWN";
     }
 }
 
 bool Parser::isExpression() {
     TokenType current = peek().type;
-    return current == TokenType::NUMBER || current == TokenType::TRUE || current == TokenType::FALSE || current == TokenType::IDENTIFIER || current == TokenType::LEFT_BRACKET || current == TokenType::MINUS || current == TokenType::NOT;
+    return current == TokenType::NUMBER || current == TokenType::TRUE || current == TokenType::FALSE || current == TokenType::IDENTIFIER || current == TokenType::LEFT_BRACKET || current == TokenType::MINUS || current == TokenType::NOT || current == TokenType::STRING_LITERAL;
 }

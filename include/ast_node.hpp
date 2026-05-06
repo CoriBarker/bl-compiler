@@ -35,9 +35,17 @@ public:
     FunctionDeclarationNode() {}
 };
 
+class ImportNode : public ASTNode {
+public:
+    std::string value;
+
+    ImportNode() {}
+};
+
 class ProgramNode : public ASTNode {
 public:
-  std::vector<std::unique_ptr<FunctionDeclarationNode>> function_declarations;
+    std::vector<std::unique_ptr<ImportNode>> imports;
+    std::vector<std::unique_ptr<FunctionDeclarationNode>> function_declarations;
 
     ProgramNode() {}
 };

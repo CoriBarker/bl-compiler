@@ -10,10 +10,12 @@ class Parser {
 public:
     explicit Parser(const std::vector<Token>& tokens);
     std::unique_ptr<ProgramNode> parseProgram(); 
+    std::vector<std::string> getErrors();
 
 private:
     std::vector<Token> tokens;
     int position;
+    std::vector<std::string> errors;
 
     std::unique_ptr<FunctionDeclarationNode> parseFunctionDeclaration();
     std::vector<std::unique_ptr<ParameterNode>> parseParameterList();
@@ -46,6 +48,7 @@ private:
     std::unique_ptr<ArrayLiteralNode> parseArrayLiteral();
     std::unique_ptr<FunctionCallNode> parseFunctionCall();
     std::vector<std::unique_ptr<ASTNode>> parseArgumentList();
+    std::unique_ptr<ImportNode> parseImport();
   
     Token advance();
     Token peek();

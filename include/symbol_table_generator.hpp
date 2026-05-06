@@ -19,6 +19,7 @@ private:
     int scope_counter;
 
     void visitProgram(ProgramNode* node);
+    void registerImport(const std::string& module_name);
     void visitFunctionDeclaration(FunctionDeclarationNode* node);
     void visitStatement(ASTNode* node);
     void visitVariableDeclaration(VariableDeclarationNode* node);

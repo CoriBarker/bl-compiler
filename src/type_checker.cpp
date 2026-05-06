@@ -271,7 +271,7 @@ Type TypeChecker::inferFunctionCall(FunctionCallNode* node) {
     Symbol* symbol = lookupVariable(node->identifier);
     if (!symbol) return Type::VOID;
 
-    if (node->arguments.size() != symbol->parameter_types.size()) {
+    if (node->arguments.size() != symbol->parameter_types.size() && node->identifier != "syscall") {
         error("'" + node->identifier + "' expects " + std::to_string(symbol->parameter_types.size()) + " argument(s) but got " + std::to_string(node->arguments.size()), node->line, node->column);
         return Type::VOID;
     }

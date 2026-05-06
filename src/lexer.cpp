@@ -99,6 +99,12 @@ std::vector<Token> Lexer::tokenise() {
                     advance();
                 }
 
+            } else if (src.substr(position, 6) == "import" && !std::isalnum(src[position+6]) && src[position+6] != '_') {
+                tokens.push_back(Token(TokenType::IMPORT, "import", line, column));
+                for (int i=0; i<6; i++) {
+                    advance();
+                }
+
             } else if (src.substr(position, 2) == "if" && !std::isalnum(src[position+2]) && src[position+2] != '_') {
               tokens.push_back(Token(TokenType::IF, "if", line, column));
                 for (int i=0; i<2; i++) {

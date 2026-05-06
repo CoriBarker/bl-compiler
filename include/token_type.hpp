@@ -49,6 +49,7 @@
     X(RIGHT_BRACE) \
     X(LEFT_SQUARE) \
     X(RIGHT_SQUARE) \
+    X(IMPORT) \
     X(END_OF_FILE) \
     X(INVALID)
 

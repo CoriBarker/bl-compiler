@@ -472,6 +472,7 @@ int main(int argc, char* argv[]) {
     std::string asm_file = stem + ".s";
 
     CodeGenerator code_gen(table);
+    code_gen.setLibraryMode(opts.emit_lib);
     code_gen.generate(ast.get(), asm_file);
 
     if (opts.verbose) {

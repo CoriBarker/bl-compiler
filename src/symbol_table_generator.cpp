@@ -18,7 +18,7 @@ void SymbolTableGenerator::visitProgram(ProgramNode* node) {
     syscall_symbol.qualified_name = "global::syscall";
     syscall_symbol.kind = SymbolKind::FUNCTION;
     syscall_symbol.type = Type::VOID;
-    syscall_symbol.parameter_types = { Type::INT64 };
+    syscall_symbol.parameter_types = { Type::INT64, Type::INT64, Type::INT64, Type::INT64, Type::INT64, Type::INT64 };
     syscall_symbol.line = 0;
     syscall_symbol.column = 0;
     table.define(syscall_symbol);
@@ -32,6 +32,10 @@ void SymbolTableGenerator::visitProgram(ProgramNode* node) {
     strlen_symbol.line = 0;
     strlen_symbol.column = 0;
     table.define(strlen_symbol);
+
+    for (int i = 0; i < (int)node->imports.size(); i++) {
+        registerImport(node->imports[i]->value);
+    }
 
     for (int i = 0; i < (int)node->function_declarations.size(); i++) {
         auto& function = node->function_declarations[i];
@@ -55,6 +59,26 @@ void SymbolTableGenerator::visitProgram(ProgramNode* node) {
 
     for (int i = 0; i < (int)node->function_declarations.size(); i++) {
         visitFunctionDeclaration(node->function_declarations[i].get());
+    }
+}
+
+void SymbolTableGenerator::registerImport(const std::string& module_name) {
+    if (module_name == "stdio") {
+        struct { const char* name; Type ret; std::vector<Type> params; } builtins[] = {
+            { "print",   Type::VOID,  { Type::STRING } },
+        };
+
+        for (auto& b : builtins) {
+            Symbol sym;
+            sym.name = b.name;
+            sym.qualified_name = "global::" + std::string(b.name);
+            sym.kind = SymbolKind::FUNCTION;
+            sym.type = b.ret;
+            sym.parameter_types = b.params;
+            sym.line = 0;
+            sym.column = 0;
+            table.define(sym);
+        }
     }
 }
 
@@ -117,6 +141,10 @@ void SymbolTableGenerator::visitStatement(ASTNode* node) {
         if (p->expression) {
             visitExpression(p->expression.get());
         }
+    }
+
+    else if (auto* p = dynamic_cast<FunctionCallNode*>(node)) {
+        visitFunctionCall(p);
     }
 }
 
@@ -308,7 +336,7 @@ void SymbolTableGenerator::visitExpression(ASTNode* node) {
 }
 
 void SymbolTableGenerator::visitFunctionCall(FunctionCallNode* node) {
-    auto symbol = table.lookup(node->identifier);
+    auto* symbol = table.lookup(node->identifier);
 
     if (symbol == nullptr) {
         error("'" + node->identifier + "' is not defined", node->line, node->column);
@@ -320,7 +348,7 @@ void SymbolTableGenerator::visitFunctionCall(FunctionCallNode* node) {
         return;
     }
     
-    if (node->arguments.size() != symbol->parameter_types.size()) {
+    if (node->arguments.size() != symbol->parameter_types.size() && node->identifier != "syscall") {
         error("'" + node->identifier + "' expects " + std::to_string(symbol->parameter_types.size()) + " arguments but got " + std::to_string(node->arguments.size()), node->line, node->column);
     }
 
