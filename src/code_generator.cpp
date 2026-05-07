@@ -559,7 +559,10 @@ void CodeGenerator::generateFunctionCall(FunctionCallNode* node) {
 
     for (size_t i = 0; i < node->arguments.size(); i++) {
         generateExpression(node->arguments[i].get());
-        emit("mov " + arg_regs[i] + ", rax");
+        emit("push rax");
+    }
+    for (int i = node->arguments.size() - 1; i >= 0; i--) {
+        emit("pop " + arg_regs[i]);
     }
 
     emit("sub rsp, 8");
