@@ -725,6 +725,9 @@ void CodeGenerator::walk(ASTNode* n) {
         if (auto* lit = dynamic_cast<NumberLiteralNode*>(a->size_expr.get())) {
             size = lit->value;
         }
+        else if (a->elements) {
+            size = (int)a->elements->value.size();
+        }
         allocate(a->identifier, size * getSizeInBytes(a->element_type));
     }
     
@@ -765,7 +768,7 @@ void CodeGenerator::allocate(const std::string& name, int size) {
     int alignment = getAlignment(s.type);
     current_offset = alignDown(current_offset, alignment);
     current_offset -= size;
-    s.offset = current_offset;
+    s.offset = current_offset + (size - getSizeInBytes(s.type)); // point to element 0
     offsets[name] = s.offset;
 }
 
