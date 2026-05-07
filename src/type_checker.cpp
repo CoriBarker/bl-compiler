@@ -55,10 +55,12 @@ void TypeChecker::checkStatement(ASTNode* node) {
 
     else if (auto* p = dynamic_cast<FunctionCallNode*>(node)) {
         Symbol* symbol = lookupVariable(p->identifier);
-        for (int i = 0; i < (int)p->arguments.size(); i++) {
-            if (!isAssignable(symbol->parameter_types[i], p->arguments[i].get())) {
-                error("'" + p->identifier + "' expects '" + typeToString(symbol->parameter_types[i]) + "' for argument " + std::to_string(i + 1) + " but got '" + typeToString(inferType(p->arguments[i].get())) + "'", p->arguments[i]->line, p->arguments[i]->column);
-                return;
+        if (p->identifier != "syscall") {
+            for (int i = 0; i < (int)p->arguments.size(); i++) {
+                if (!isAssignable(symbol->parameter_types[i], p->arguments[i].get())) {
+                    error("'" + p->identifier + "' expects '" + typeToString(symbol->parameter_types[i]) + "' for argument " + std::to_string(i + 1) + " but got '" + typeToString(inferType(p->arguments[i].get())) + "'", p->arguments[i]->line, p->arguments[i]->column);
+                    return;
+                }
             }
         }
     }
@@ -342,10 +344,12 @@ Type TypeChecker::inferFunctionCall(FunctionCallNode* node) {
         return Type::VOID;
     }
 
-    for (int i = 0; i < (int)node->arguments.size(); i++) {
-        if (!isAssignable(symbol->parameter_types[i], node->arguments[i].get())) {
-            error("'" + node->identifier + "' expects '" + typeToString(symbol->parameter_types[i]) + "' for argument " + std::to_string(i + 1) + " but got '" + typeToString(inferType(node->arguments[i].get())) + "'", node->arguments[i]->line, node->arguments[i]->column);
-            return Type::VOID;
+    if (node->identifier != "syscall") {
+        for (int i = 0; i < (int)node->arguments.size(); i++) {
+            if (!isAssignable(symbol->parameter_types[i], node->arguments[i].get())) {
+                error("'" + node->identifier + "' expects '" + typeToString(symbol->parameter_types[i]) + "' for argument " + std::to_string(i + 1) + " but got '" + typeToString(inferType(node->arguments[i].get())) + "'", node->arguments[i]->line, node->arguments[i]->column);
+                return Type::VOID;
+            }
         }
     }
 
