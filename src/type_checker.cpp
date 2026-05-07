@@ -25,8 +25,16 @@ void TypeChecker::checkStatement(ASTNode* node) {
         checkVariableDeclaration(p);
     }
 
+    else if (auto* p = dynamic_cast<ArrayDeclarationNode*>(node)) {
+        checkArrayDeclaration(p);
+    }
+
     else if (auto p = dynamic_cast<VariableAssignmentNode*>(node)) {
         checkVariableAssignment(p);
+    }
+
+    else if (auto* p = dynamic_cast<ArrayAssignmentNode*>(node)) {
+        checkArrayAssignment(p);
     }
 
     else if (auto p = dynamic_cast<ReturnNode*>(node)) {
@@ -43,6 +51,16 @@ void TypeChecker::checkStatement(ASTNode* node) {
 
     else if (auto p = dynamic_cast<ForStatementNode*>(node)) {
         checkFor(p);
+    }
+
+    else if (auto* p = dynamic_cast<FunctionCallNode*>(node)) {
+        Symbol* symbol = lookupVariable(p->identifier);
+        for (int i = 0; i < (int)p->arguments.size(); i++) {
+            if (!isAssignable(symbol->parameter_types[i], p->arguments[i].get())) {
+                error("'" + p->identifier + "' expects '" + typeToString(symbol->parameter_types[i]) + "' for argument " + std::to_string(i + 1) + " but got '" + typeToString(inferType(p->arguments[i].get())) + "'", p->arguments[i]->line, p->arguments[i]->column);
+                return;
+            }
+        }
     }
 }
 
@@ -62,6 +80,23 @@ void TypeChecker::checkVariableDeclaration(VariableDeclarationNode* node) {
     }
 }
 
+void TypeChecker::checkArrayDeclaration(ArrayDeclarationNode* node) {
+    if (node->elements) {
+        auto* literal = dynamic_cast<ArrayLiteralNode*>(node->elements.get());
+        if (!literal) return;
+
+        for (int i = 0; i < (int)literal->value.size(); i++) {
+            if (!isAssignable(node->element_type, literal->value[i].get())) {
+                Type got = inferType(literal->value[i].get());
+                error("array '" + node->identifier + "' element " + std::to_string(i) +
+                      " cannot assign '" + typeToString(got) + "' to '" +
+                      typeToString(node->element_type) + "'",
+                      literal->value[i]->line, literal->value[i]->column);
+            }
+        }
+    }
+}
+
 void TypeChecker::checkVariableAssignment(VariableAssignmentNode* node) {
     Symbol* symbol = lookupVariable(node->identifier);
     if (!symbol) return;
@@ -76,6 +111,25 @@ void TypeChecker::checkVariableAssignment(VariableAssignmentNode* node) {
         error("cannot assign '" + typeToString(right) + "' to '" + typeToString(left) + "' variable '" + node->identifier + "'", node->line, node->column);
     }
 }
+
+void TypeChecker::checkArrayAssignment(ArrayAssignmentNode* node) {
+    Symbol* symbol = lookupVariable(node->identifier);
+    if (!symbol) return;
+
+    Type index_type = inferType(node->index.get());
+    if (!isInt(index_type)) {
+        error("array index must be an integer but got '" + typeToString(index_type) + "'",
+              node->index->line, node->index->column);
+    }
+
+    if (!isAssignable(symbol->type, node->value.get())) {
+        Type got = inferType(node->value.get());
+        error("cannot assign '" + typeToString(got) + "' to '" +
+              typeToString(symbol->type) + "' array '" + node->identifier + "'",
+              node->line, node->column);
+    }
+}
+
 
 void TypeChecker::checkReturn(ReturnNode* node) {
     Type return_type = inferType(node->expression.get());
@@ -173,6 +227,14 @@ Type TypeChecker::inferType(ASTNode* node) {
 
     if (auto* p = dynamic_cast<CastNode*>(node)) {
         return p->type;
+    }
+
+    if (auto* p = dynamic_cast<ArrayAccessNode*>(node)) {
+        return inferArrayAccess(p);
+    }
+
+    if (auto* p = dynamic_cast<ArrayLiteralNode*>(node)) {
+        return inferArrayLiteral(p);
     }
 
     return Type::VOID;
@@ -281,13 +343,47 @@ Type TypeChecker::inferFunctionCall(FunctionCallNode* node) {
     }
 
     for (int i = 0; i < (int)node->arguments.size(); i++) {
-        if (inferType(node->arguments[i].get()) != symbol->parameter_types[i]) {
+        if (!isAssignable(symbol->parameter_types[i], node->arguments[i].get())) {
             error("'" + node->identifier + "' expects '" + typeToString(symbol->parameter_types[i]) + "' for argument " + std::to_string(i + 1) + " but got '" + typeToString(inferType(node->arguments[i].get())) + "'", node->arguments[i]->line, node->arguments[i]->column);
             return Type::VOID;
         }
     }
 
     return symbol->type;
+}
+
+Type TypeChecker::inferArrayAccess(ArrayAccessNode* node) {
+    Symbol* symbol = lookupVariable(node->identifier);
+    if (!symbol) {
+        error("'" + node->identifier + "' is undefined", node->line, node->column);
+        return Type::VOID;
+    }
+
+    Type index_type = inferType(node->index.get());
+    if (!isInt(index_type)) {
+        error("array index must be an integer but got '" + typeToString(index_type) + "'",
+              node->index->line, node->index->column);
+    }
+
+    return symbol->type;
+}
+
+Type TypeChecker::inferArrayLiteral(ArrayLiteralNode* node) {
+    if (node->value.empty()) return Type::VOID;
+
+    Type first = inferType(node->value[0].get());
+
+    for (int i = 1; i < (int)node->value.size(); i++) {
+        if (!isAssignable(first, node->value[i].get())) {
+            Type got = inferType(node->value[i].get());
+            error("array literal element " + std::to_string(i) + " has type '" +
+                  typeToString(got) + "' but expected '" + typeToString(first) + "'",
+                  node->value[i]->line, node->value[i]->column);
+            return Type::VOID;
+        }
+    }
+
+    return first;
 }
 
 void TypeChecker::error(const std::string& message, int line, int column) {
@@ -341,6 +437,7 @@ bool TypeChecker::isInt(Type t) {
     case Type::UINT16:
     case Type::UINT32:
     case Type::UINT64:
+    case Type::INTEGER_LITERAL:
         return true;
     default:
         return false;

@@ -22,7 +22,9 @@ private:
     void checkFunction(FunctionDeclarationNode* node);
     void checkStatement(ASTNode* node);
     void checkVariableDeclaration(VariableDeclarationNode* node);
+    void checkArrayDeclaration(ArrayDeclarationNode* node);
     void checkVariableAssignment(VariableAssignmentNode* node);
+    void checkArrayAssignment(ArrayAssignmentNode* node);
     void checkReturn(ReturnNode* node);
     void checkIf(IfStatementNode* node);
     void checkWhile(WhileStatementNode* node);
@@ -33,6 +35,8 @@ private:
     Type inferBinaryOp(BinaryOperationNode* node);
     Type inferUnaryOp(UnaryOperationNode* node);
     Type inferFunctionCall(FunctionCallNode* node);
+    Type inferArrayAccess(ArrayAccessNode* node);
+    Type inferArrayLiteral(ArrayLiteralNode* node);
 
     void error(const std::string& message, int line, int column);
     std::string typeToString(Type type);
