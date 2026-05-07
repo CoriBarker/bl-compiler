@@ -43,6 +43,7 @@ private:
     void analyseUnaryOp(UnaryOperationNode* node, Context& ctx);
     void analyseArrayAccess(ArrayAccessNode* node, Context& ctx);
     void analyseArrayLiteral(ArrayLiteralNode* node, Context& ctx);
+    void analyseCast(CastNode* node, Context& ctx);
 
     bool allPathsReturn(std::vector<std::unique_ptr<ASTNode>>& nodes);
 

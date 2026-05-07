@@ -191,6 +191,9 @@ void SemanticAnalyser::analyseExpression(ASTNode* node, Context& ctx) {
     else if (auto* p = dynamic_cast<ArrayLiteralNode*>(node)) {
         analyseArrayLiteral(p, ctx);
     }
+    else if (auto* p = dynamic_cast<CastNode*>(node)) {
+        analyseCast(p, ctx);
+    }
 }
 
 void SemanticAnalyser::analyseIdentifier(IdentifierNode* node, Context& ctx) {
@@ -238,6 +241,10 @@ void SemanticAnalyser::analyseArrayLiteral(ArrayLiteralNode* node, Context& ctx)
     for (auto& it : node->value) {
         analyseExpression(it.get(), ctx);
     }
+}
+
+void SemanticAnalyser::analyseCast(CastNode* node, Context& ctx) {
+    analyseExpression(node->expression.get(), ctx);
 }
 
 bool SemanticAnalyser::allPathsReturn(std::vector<std::unique_ptr<ASTNode>>& nodes) {

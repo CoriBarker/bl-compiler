@@ -10,6 +10,10 @@ void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
 
     output << ".intel_syntax noprefix\n";
 
+    output << ".section .data\n";
+    output << "itoa_buffer:\n";
+    emit(".space 32");
+
     bool has_main = false;
     for (const auto& func : node->function_declarations) {
         if (func->identifier == "main") {
@@ -392,6 +396,14 @@ void CodeGenerator::generateExpression(ASTNode* node) {
     else if (auto* p = dynamic_cast<ArrayAccessNode*>(node)) {
         generateArrayAccess(p);
     }
+
+    else if (auto* p = dynamic_cast<CastNode*>(node)) {
+        generateExpression(p->expression.get());
+        if (p->type == Type::STRING) {
+            emit("mov rdi, rax");
+            emit("call itoa");
+        }
+    }
 }
 
 void CodeGenerator::generateBinaryOp(BinaryOperationNode* node) {
@@ -560,6 +572,47 @@ void CodeGenerator::generateBuiltIns() {
     emit("inc rax");
     emit("jmp " + loop);
     emitLabel(done);
+    emit("ret");
+
+    emitLabel("itoa");
+    std::string check_neg = newLabel("check_neg");
+    std::string convert   = newLabel("convert");
+    std::string loop_1    = newLabel("loop");
+    std::string done_1    = newLabel("done");
+    emit("push rbp");
+    emit("mov rbp, rsp");
+    emit("sub rsp, 32");
+    emit("mov rax, rdi");
+    emit("lea rsi, [rip + itoa_buffer + 31]");
+    emit("mov BYTE PTR [rsi], 0");
+    emit("mov rbx, 10");
+    emit("xor rcx, rcx");
+    emit("cmp rax, 0");
+    emit("jne " + check_neg);
+    emit("dec rsi");
+    emit("mov BYTE PTR [rsi], '0'");
+    emit("mov rax, rsi");
+    emit("jmp " + done_1);
+    emitLabel(check_neg);
+    emit("jge " + convert);
+    emit("neg rax");
+    emit("mov rcx, 1");
+    emitLabel(convert);
+    emitLabel(loop_1);
+    emit("xor rdx, rdx");
+    emit("div rbx");
+    emit("add dl, '0'");
+    emit("dec rsi");
+    emit("mov BYTE PTR [rsi], dl");
+    emit("test rax, rax");
+    emit("jnz " + loop_1);
+    emit("cmp rcx, 0");
+    emit("je " + done_1);
+    emit("dec rsi");
+    emit("mov BYTE PTR [rsi], '-'");
+    emitLabel(done_1);
+    emit("mov rax, rsi");
+    emit("leave");
     emit("ret");
 }
 

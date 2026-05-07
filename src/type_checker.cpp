@@ -171,6 +171,10 @@ Type TypeChecker::inferType(ASTNode* node) {
         return inferFunctionCall(p);
     }
 
+    if (auto* p = dynamic_cast<CastNode*>(node)) {
+        return p->type;
+    }
+
     return Type::VOID;
 }
 
