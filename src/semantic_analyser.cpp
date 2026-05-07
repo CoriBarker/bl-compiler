@@ -51,6 +51,9 @@ void SemanticAnalyser::analyseStatement(ASTNode* node, Context& ctx) {
     else if (auto* p = dynamic_cast<ForStatementNode*>(node)) {
         analyseFor(p, ctx);
     }
+    else if (auto* p = dynamic_cast<FunctionCallNode*>(node)) {
+        analyseFunctionCall(p, ctx);
+    }
 }
 
 void SemanticAnalyser::analyseVariableDeclaration(VariableDeclarationNode* node, Context& ctx) {
