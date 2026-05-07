@@ -265,7 +265,8 @@ void CodeGenerator::generateArrayAssignment(ArrayAssignmentNode* node) {
     emit("pop rdx");
 
     emit("lea rcx, [rbp + " + std::to_string(base) + "]");
-    emit("mov " + keyword + " PTR [rcx + rax], " + val_reg);
+    emit("neg rax");
+    emit("mov " + keyword + " PTR [rcx + rax], " + getRegisterFromRDX(s->type));
 }
 
 void CodeGenerator::generateReturn(ReturnNode* node) {
@@ -574,6 +575,7 @@ void CodeGenerator::generateArrayAccess(ArrayAccessNode* node) {
     generateExpression(node->index.get());
     emit("imul rax, rax, " + std::to_string(element_size));
     emit("lea rcx, [rbp + " + std::to_string(base) + "]");
+    emit("neg rax");
     switch (s->type) {
     case Type::INT8:
         emit("movsx rax, BYTE PTR [rcx + rax]");
