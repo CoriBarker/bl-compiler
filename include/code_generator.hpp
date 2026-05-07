@@ -62,6 +62,7 @@ private:
 
     std::string getSizeKeyword(Type t);
     std::string getRegister(Type t);
+    std::string getRegisterFromRDX(Type t);
     int getSizeInBytes(Type t);
     void walk(ASTNode* n);
     void allocate(const std::string& name, int size);

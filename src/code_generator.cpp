@@ -8,15 +8,15 @@ void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
     output.open(filename);
     label_counter = 0;
 
-    output << ".intel_syntax noprefix\n";
+    output << ".intel_syntax noprefix\n"; // Use intel syntax
 
     output << ".section .data\n";
-    output << "itoa_buffer:\n";
+    output << "itoa_buffer:\n"; // Buffer for type conversion
     emit(".space 32");
 
     bool has_main = false;
     for (const auto& func : node->function_declarations) {
-        if (func->identifier == "main") {
+        if (func->identifier == "main") {    // Check for main function
             has_main = true;
             break;
         }
@@ -46,7 +46,7 @@ void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
         output << "\n";
     }
 
-    if (!lib_mode) {
+    if (!lib_mode) {    // If compiling a library no _start label is necessary
         emitLabel("_start");
         emit("call main");
         emit("mov rdi, rax");
@@ -54,7 +54,7 @@ void CodeGenerator::generate(ProgramNode* node, const std::string& filename) {
         emit("syscall");
     }
 
-    output << ".section .rodata\n";
+    output << ".section .rodata\n";    // Read only data for strings
     output << ".int_fmt: .string \"%lld\\n\"\n";
     for (auto& s : rodata_strings) {
         output << s.label << ": .string \"" << s.value << "\"\n";
@@ -107,16 +107,19 @@ void CodeGenerator::generateFunction(FunctionDeclarationNode* node) {
     buildOffsetMap(node);
     emitLabel(current_function);
 
+    // Function prologue
     emit("push rbp");
     emit("mov rbp, rsp");
     int stack_size = ((-current_offset + 15) / 16) * 16;
     emit("sub rsp, " + std::to_string(stack_size));
 
+    // Different registers for different argument sizes
     static const std::vector<std::string> arg_regs_64 = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
     static const std::vector<std::string> arg_regs_32 = { "edi", "esi", "edx", "ecx", "r8d", "r9d" };
     static const std::vector<std::string> arg_regs_16 = { "di",  "si",  "dx",  "cx",  "r8w", "r9w" };
     static const std::vector<std::string> arg_regs_8  = { "dil", "sil", "dl",  "cl",  "r8b", "r9b" };
     
+    // Get correct register for the argument size
     for (size_t i = 0; i < node->parameters.size(); i++) {
         Type t = node->parameters[i]->type;
         std::string keyword = getSizeKeyword(t);
@@ -134,6 +137,7 @@ void CodeGenerator::generateFunction(FunctionDeclarationNode* node) {
         generateStatement(node->body[i].get());
     }
 
+    // Function epilogue
     emitLabel(return_label);
     emit("mov rsp, rbp");
     emit("pop rbp");
@@ -207,7 +211,7 @@ void CodeGenerator::generateVariableDeclaration(VariableDeclarationNode* node) {
         std::string size = getSizeKeyword(t);
         std::string reg = getRegister(t);
 
-        emit("mov " + size + " PTR [rbp + " + std::to_string(offset) + "], " + reg);
+        emit("mov " + size + " PTR [rbp + " + std::to_string(offset) + "], " + reg); // Store value
     }
 }
 
@@ -217,15 +221,17 @@ void CodeGenerator::generateArrayDeclaration(ArrayDeclarationNode* node) {
         auto* literal = dynamic_cast<ArrayLiteralNode*>(node->elements.get());
         for (int i = 0; i < (int)literal->value.size(); i++) {
             generateExpression(literal->value[i].get());
+            int size = getSizeInBytes(node->element_type);
             std::string keyword = getSizeKeyword(node->element_type);
-            emit("mov " + keyword + " PTR [rbp + " + std::to_string(base + i * 8) + "], " + getRegister(node->element_type));
+            emit("mov " + keyword + " PTR [rbp + " + std::to_string(base - i * size) + "], " + getRegister(node->element_type)); // Store values in each byte from the base pointer
         }
     }
     else {
         auto* size_literal = dynamic_cast<NumberLiteralNode*>(node->size_expr.get());
         for (int i = 0; i < size_literal->value; i++) {
+            int size = getSizeInBytes(node->element_type);
             std::string keyword = getSizeKeyword(node->element_type);
-            emit("mov " + keyword + " PTR [rbp + " + std::to_string(base + i * 8) + "], 0");
+            emit("mov " + keyword + " PTR [rbp + " + std::to_string(base - i * size) + "], 0"); // Zero initialise the array
         }
     }
 }
@@ -233,22 +239,33 @@ void CodeGenerator::generateArrayDeclaration(ArrayDeclarationNode* node) {
 void CodeGenerator::generateVariableAssignment(VariableAssignmentNode* node) {
     generateExpression(node->value.get());
     int offset = getOffset(node->identifier);
-    Symbol* s = table.lookupName(node->identifier);
+    Symbol* s = table.lookupName(node->identifier); // Lookup variable to find its type
     std::string keyword = getSizeKeyword(s->type);
-    emit("mov " + keyword + " PTR [rbp + " + std::to_string(offset) + "], " + getRegister(s->type));
+    emit("mov " + keyword + " PTR [rbp + " + std::to_string(offset) + "], " + getRegister(s->type)); // Store value
 }
 
 void CodeGenerator::generateArrayAssignment(ArrayAssignmentNode* node) {
     int base = getOffset(node->identifier);
+    Symbol* s = table.lookupName(node->identifier);
 
+    std::string keyword = getSizeKeyword(s->type);
+    int size = getSizeInBytes(s->type);
+
+    std::string val_reg = getRegister(s->type);
+
+    // value → rax
     generateExpression(node->value.get());
     emit("push rax");
 
+    // index → rax
     generateExpression(node->index.get());
-    emit("imul rax, rax, 8");
-    emit("lea rcx, [rbp + " + std::to_string(base) + "]");
+    emit("imul rax, rax, " + std::to_string(size));
+
+    // restore value → rdx
     emit("pop rdx");
-    emit("mov [rcx + rax], rdx");
+
+    emit("lea rcx, [rbp + " + std::to_string(base) + "]");
+    emit("mov " + keyword + " PTR [rcx + rax], " + val_reg);
 }
 
 void CodeGenerator::generateReturn(ReturnNode* node) {
@@ -557,7 +574,34 @@ void CodeGenerator::generateArrayAccess(ArrayAccessNode* node) {
     generateExpression(node->index.get());
     emit("imul rax, rax, " + std::to_string(element_size));
     emit("lea rcx, [rbp + " + std::to_string(base) + "]");
-    emit("mov rax, [rcx + rax]");
+    switch (s->type) {
+    case Type::INT8:
+        emit("movsx rax, BYTE PTR [rcx + rax]");
+        break;
+        
+    case Type::UINT8:
+        emit("movzx rax, BYTE PTR [rcx + rax]");
+        break;
+        
+    case Type::INT16:
+        emit("movsx rax, WORD PTR [rcx + rax]");
+        break;
+        
+    case Type::UINT16:
+        emit("movzx rax, WORD PTR [rcx + rax]");
+        break;
+        
+    case Type::INT32:
+    case Type::UINT32:
+        emit("mov eax, DWORD PTR [rcx + rax]");
+        break;
+        
+    case Type::INT64:
+    case Type::UINT64:
+    case Type::STRING:
+        emit("mov rax, QWORD PTR [rcx + rax]");
+        break;
+    }
 }
 
 void CodeGenerator::generateBuiltIns() {
@@ -641,6 +685,20 @@ std::string CodeGenerator::getRegister(Type t) {
     case Type::INT64:
     case Type::UINT64: return "rax";
     default: return "rax";
+    }
+}
+
+std::string CodeGenerator::getRegisterFromRDX(Type t) {
+    switch (t) {
+    case Type::INT8:
+    case Type::UINT8:  return "dl";
+    case Type::INT16:
+    case Type::UINT16: return "dx";
+    case Type::INT32:
+    case Type::UINT32: return "edx";
+    case Type::INT64:
+    case Type::UINT64: return "rdx";
+    default: return "rdx";
     }
 }
 
