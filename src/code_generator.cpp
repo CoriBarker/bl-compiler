@@ -382,7 +382,7 @@ void CodeGenerator::generateExpression(ASTNode* node) {
             break;
             
         case Type::INT32:
-            emit("mov eax, DWORD PTR [rbp + " + std::to_string(offset) + "]");
+            emit("movsx rax, DWORD PTR [rbp + " + std::to_string(offset) + "]");
             break;
             
         case Type::UINT32:
